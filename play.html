@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Погружение</title>
+</head>
+<body>
+
+<div id="boot" style="color:#b06bff;font-family:Consolas,monospace;padding:60px 20px;text-align:center;letter-spacing:2px;">
+  Проверка доступа…
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var MASTER_KEYS = { 'OWNER-MASTER-2024': 'Владелец' };
+  var INVESTOR_KEYS = {
+    'INVESTOR-001': 'Инвестор №1',
+    'INVESTOR-002': 'Инвестор №2',
+    'INVESTOR-003': 'Инвестор №3',
+    'INVESTOR-004': 'Инвестор №4',
+    'INVESTOR-005': 'Инвестор №5',
+    'INVESTOR-006': 'Инвестор №6',
+    'INVESTOR-007': 'Инвестор №7',
+    'INVESTOR-008': 'Инвестор №8',
+    'INVESTOR-009': 'Инвестор №9',
+    'INVESTOR-010': 'Инвестор №10'
+  };
+  var STORAGE_KEY = 'pogruzhenie_bindings';
+
+  function showError(title, reason) {
+    document.body.innerHTML =
+      '<div style="color:#c0392b;font-family:Consolas,monospace;padding:60px 20px;text-align:center;">' +
+        '<h2 style="letter-spacing:4px;">' + title + '</h2>' +
+        '<p style="color:#a0a0a8;margin-top:20px;font-size:13px;line-height:1.7;">' + reason + '</p>' +
+        '<p style="color:#40404a;margin-top:32px;font-size:11px;letter-spacing:2px;">PRIVATE DEMO · CONFIDENTIAL</p>' +
+      '</div>';
+  }
+
+  var key = (new URLSearchParams(location.search).get('key') || '').trim();
+  var isOwner = false;
+  var label = '';
+
+  if (!key) {
+    showError('ДОСТУП ЗАКРЫТ', 'Ключ не указан. Откройте ссылку целиком со знаком «?» и ключом.');
+    return;
+  }
+  if (Object.prototype.hasOwnProperty.call(MASTER_KEYS, key)) {
+    isOwner = true; label = MASTER_KEYS[key];
+  } else if (Object.prototype.hasOwnProperty.call(INVESTOR_KEYS, key)) {
+    isOwner = false; label = INVESTOR_KEYS[key];
+    try {
+      var b = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      if (!b[key]) { b[key] = 'bound'; localStorage.setItem(STORAGE_KEY, JSON.stringify(b)); }
+    } catch (e) {}
+  } else {
+    showError('ДОСТУП ЗАКРЫТ', 'Ключ недействителен.');
+    return;
+  }
+
+  function loadGame() {
+    var boot = document.getElementById('boot');
+    if (boot && boot.parentNode) boot.parentNode.removeChild(boot);
+    var s = document.createElement('script');
+    s.src = 'game.js';
+    s.onerror = function () {
+      showError('ОШИБКА ЗАГРУЗКИ', 'Файл game.js не найден рядом с play.html.');
+    };
+    document.body.appendChild(s);
+  }
+
+  if (isOwner) {
+    loadGame();
+  } else {
+    document.body.innerHTML =
+      '<div style="position:fixed;inset:0;background:#0a0a0f;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#b06bff;font-family:Consolas,monospace;letter-spacing:3px;text-align:center;padding:20px;">' +
+        '<div style="font-size:11px;color:#707080;margin-bottom:20px;">PRIVATE DEMO</div>' +
+        '<div style="font-size:20px;margin-bottom:12px;">' + label + '</div>' +
+        '<div style="font-size:11px;color:#707080;margin-bottom:32px;">Доступ активирован</div>' +
+        '<button id="start-btn" style="background:#8a2be2;color:#fff;border:none;padding:14px 40px;font-family:inherit;font-size:12px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;border-radius:4px;">Начать</button>' +
+      '</div>';
+    document.getElementById('start-btn').addEventListener('click', function () {
+      document.body.innerHTML = '<div id="boot">…</div>';
+      loadGame();
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
