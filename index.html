@@ -3,31 +3,105 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Погружение — приватная демонстрация</title>
+<meta name="description" content="Погружение — интерактивный хоррор-перфоманс. Приватная демонстрация.">
+<meta name="theme-color" content="#07080c">
+<title>ПОГРУЖЕНИЕ — приватная демонстрация</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&family=Oswald:wght@300;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="landing">
-    <div class="badge">PRIVATE DEMO</div>
-    <h1>ПОГРУЖЕНИЕ</h1>
-    <p class="subtitle">Интерактивная история в одном действии</p>
 
-    <p class="desc">
-      Демонстрационная версия проекта. Доступ выдаётся персонально.
-      Если вы получили ссылку — просто откройте её. Если нет — свяжитесь с автором.
-    </p>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="particles" id="particles" aria-hidden="true"></div>
 
-    <div class="cover">
-      <img src="assets/images/cover.jpg" alt="" onerror="this.parentNode.style.display='none'">
+  <main class="stage">
+    <div class="frame">
+      <div class="badge">
+        <span class="badge__dot"></span>
+        PRIVATE DEMO · ДОСТУП ОГРАНИЧЕН
+      </div>
+
+      <h1 class="title" data-text="ПОГРУЖЕНИЕ">ПОГРУЖЕНИЕ</h1>
+      <p class="subtitle">Интерактивный хоррор-перфоманс</p>
+
+      <div class="divider"></div>
+
+      <p class="desc">
+        Демонстрационная версия проекта. Доступ выдаётся персонально.
+        Если вы получили ссылку — просто откройте её. Если нет — свяжитесь с автором.
+      </p>
+
+      <div class="cover" id="cover">
+        <img src="assets/images/cover.jpg" alt=""
+             onerror="document.getElementById('cover').classList.add('cover--empty')">
+        <div class="cover__overlay"></div>
+        <div class="cover__heartbeat" aria-hidden="true">
+          <svg viewBox="0 0 300 60" preserveAspectRatio="none">
+            <polyline class="ecg"
+              points="0,30 40,30 50,30 55,10 60,50 65,25 70,30 110,30 120,30 125,15 130,45 135,28 140,30 180,30 190,30 195,8 200,52 205,22 210,30 300,30"/>
+          </svg>
+        </div>
+      </div>
+
+      <ul class="meta">
+        <li><span>ЖАНР</span>Интерактивная проза</li>
+        <li><span>ДЛИТЕЛЬНОСТЬ</span>~30 минут</li>
+        <li><span>ЯЗЫК</span>Русский</li>
+        <li><span>ВОЗРАСТ</span>18+</li>
+      </ul>
+
+      <div class="enter">
+        <input type="text" id="keyInput" class="key-input"
+               placeholder="КЛЮЧ ДОСТУПА" autocomplete="off" spellcheck="false">
+        <button class="btn" id="enterBtn" type="button">
+          <span class="btn__label">НАЧАТЬ ПОГРУЖЕНИЕ</span>
+          <span class="btn__glow"></span>
+        </button>
+      </div>
+
+      <p class="hint">Есть ключ? Введите его выше. Если нет — свяжитесь с автором.</p>
+
+      <footer class="footer">
+        Конфиденциально · Материалы не подлежат распространению
+      </footer>
     </div>
+  </main>
 
-    <p class="meta">
-      Жанр: интерактивная проза · Длительность: ~30 минут · Язык: русский
-    </p>
+  <script>
+    (function(){
+      var input = document.getElementById('keyInput');
+      var btn = document.getElementById('enterBtn');
 
-    <footer>
-      Конфиденциально · Материалы не подлежат распространению
-    </footer>
-  </div>
+      // Пылинки
+      var root = document.getElementById('particles');
+      for (var i = 0; i < 40; i++) {
+        var s = document.createElement('span');
+        s.style.left = Math.random() * 100 + '%';
+        s.style.animationDuration = (12 + Math.random() * 22) + 's';
+        s.style.animationDelay = (-Math.random() * 30) + 's';
+        s.style.opacity = (0.08 + Math.random() * 0.25).toFixed(2);
+        var sz = (1 + Math.random() * 2).toFixed(1) + 'px';
+        s.style.width = sz;
+        s.style.height = sz;
+        if (Math.random() > 0.8) s.style.background = '#ff2f4d';
+        root.appendChild(s);
+      }
+
+      function go(){
+        var key = (input.value || '').trim();
+        if (key) {
+          location.href = 'play.html?key=' + encodeURIComponent(key);
+        } else {
+          location.href = 'play.html';
+        }
+      }
+      btn.addEventListener('click', go);
+      input.addEventListener('keydown', function(e){ if (e.key === 'Enter') go(); });
+    })();
+  </script>
 </body>
 </html>
