@@ -4,6 +4,8 @@
 var CSS = [
 ':root{--bg:#07080c;--panel:#0c0e15;--border:rgba(94,230,224,.15);--text:#d6dbe4;--dim:#9aa4b5;--faint:#4a5262;--acc:#5ee6e0;--acc2:#d18cff;--dg:#ff4757;--gd:#5ee6e0;--wr:#ffb84d;--vp:#5ee6e0;--vm:#ff4757;--vz:#9aa4b5;}',
 '*{box-sizing:border-box;margin:0;padding:0;}',
+   'html,body{display:block !important;align-items:initial !important;justify-content:initial !important;padding:0 !important;margin:0 !important;height:auto !important;min-height:100vh;overflow-anchor:none !important;scroll-behavior:auto !important;}',
+'#app,#scene,#text,#choices,#end{overflow-anchor:none !important;}',
    'html,body{display:block !important;align-items:initial !important;justify-content:initial !important;padding:0 !important;margin:0 !important;height:auto !important;min-height:100vh;}',
 'html{scroll-behavior:auto;}',
 'body{background:var(--bg);color:var(--text);font-family:"JetBrains Mono",Consolas,ui-monospace,monospace;font-size:17px;line-height:1.8;min-height:100vh;padding:0;position:relative;overflow-x:hidden;-webkit-font-smoothing:antialiased;}',
@@ -178,29 +180,34 @@ var Audio2 = (function(){
   var playedScreamers = {};
   var currentAmbient = null;
 
-    function init(){
-    if (started) return;
-    try {
-      var AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) { console.warn('[Audio] Web Audio API не поддерживается'); return; }
-      ctx = new AC();
-      master = ctx.createGain();
-      master.gain.value = 0.15;
-      master.connect(ctx.destination);
-      if (ctx.state === 'suspended') ctx.resume();
-      started = true;
-      console.log('[Audio] init OK, state =', ctx.state);
-    } catch(e){ console.error('[Audio] init failed:', e); }
+      function init(){
+    if (!ctx) {
+      try {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) { console.warn('[Audio] Web Audio API не поддерживается'); return; }
+        ctx = new AC();
+        master = ctx.createGain();
+        master.gain.value = 0.55;
+        master.connect(ctx.destination);
+        console.log('[Audio] init OK, state =', ctx.state);
+      } catch(e){ console.error('[Audio] init failed:', e); return; }
+    }
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(function(){
+        console.log('[Audio] resumed, state =', ctx.state);
+      });
+    }
+    started = true;
   }
   function resume(){
     if (!ctx) init();
     if (ctx && ctx.state === 'suspended') ctx.resume();
   }
-     function setMuted(v){
+       function setMuted(v){
     muted = v;
     if (!ctx || !master) return;
     master.gain.cancelScheduledValues(ctx.currentTime);
-    master.gain.setValueAtTime(v ? 0.0001 : 0.15, ctx.currentTime);
+    master.gain.setValueAtTime(v ? 0.0001 : 0.55, ctx.currentTime);
   }
   function noiseBuffer(dur){
     var size = Math.max(1, Math.floor(ctx.sampleRate * dur));
@@ -357,7 +364,7 @@ var Audio2 = (function(){
     var nodes = [];
     var gain = ctx.createGain();
     gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.5, ctx.currentTime + 1.5);
+    gain.gain.exponentialRampToValueAtTime(1.0, ctx.currentTime + 1.5);
     gain.connect(master);
     nodes.push(gain);
 
@@ -691,6 +698,21 @@ var Audio2 = (function(){
    РАСКРАСКА ИМЁН ПЕРСОНАЖЕЙ
    ============================================================ */
 function colorizeText(html){
+   function resetScroll(){
+  try {
+    var ae = document.activeElement;
+    if (ae && ae !== document.body && ae.blur) ae.blur();
+  } catch(e){}
+
+  var se = document.scrollingElement || document.documentElement || document.body;
+  if (se) se.scrollTop = 0;
+  if (document.documentElement) document.documentElement.scrollTop = 0;
+  if (document.body) document.body.scrollTop = 0;
+
+  try { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); }
+  catch(e){ window.scrollTo(0, 0); }
+  try { window.scroll(0, 0); } catch(e){}
+}
   if (!html) return '';
   html = html.replace(/<span class="voice">([^<]+?)<\/span>/g, function(m, name){
     var t = name.replace(/\s+/g, ' ').trim();
@@ -2583,26 +2605,32 @@ function render(id){
     G.currentScene = id;
     updProgress(id);
 
-    // === КОНЦОВКА ===
+    // ============ КОНЦОВКА ============
     if (sc.type === 'ending'){
       renderEnding();
 
-      // Сброс скролла + звуки финала + скример
+      Audio2.init();
       Audio2.whoosh();
       Audio2.playSceneAmbient('ending');
       if (G.ending && SCREAMER_SCENES[G.ending]) {
         Audio2.tryPlayScreamer(G.ending);
       }
 
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
+      // Многоступенчатый сброс скролла
+      resetScroll();
+      requestAnimationFrame(function(){
+        resetScroll();
+        requestAnimationFrame(function(){ resetScroll(); });
+      });
+      setTimeout(resetScroll, 30);
+      setTimeout(resetScroll, 120);
+      setTimeout(resetScroll, 350);
 
       $scene.classList.remove('fading-out');
       return;
     }
 
-    // === ОБЫЧНАЯ СЦЕНА ===
+    // ============ ОБЫЧНАЯ СЦЕНА ============
     $scene.style.display = 'flex';
     $end.style.display = 'none';
     $title.textContent = sc.title || '';
@@ -2620,23 +2648,21 @@ function render(id){
 
     updStatus();
 
-    // Звуки: переход, атмосфера сцены, скример
+    Audio2.init();
     Audio2.whoosh();
     Audio2.playSceneAmbient(id);
     Audio2.tryPlayScreamer(id);
     if (SCREAMER_SCENES[id]) setTimeout(function(){ Audio2.heartbeat(); }, 900);
 
-    // Принудительный сброс скролла тремя способами (надёжно во всех браузерах)
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-
-    // Страховка: если браузер попытается восстановить старую позицию
-    setTimeout(function(){
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-    }, 60);
+    // Многоступенчатый сброс скролла: сразу + после перерисовки + страховка
+    resetScroll();
+    requestAnimationFrame(function(){
+      resetScroll();
+      requestAnimationFrame(function(){ resetScroll(); });
+    });
+    setTimeout(resetScroll, 30);
+    setTimeout(resetScroll, 120);
+    setTimeout(resetScroll, 350);
 
     requestAnimationFrame(function(){
       requestAnimationFrame(function(){
@@ -2721,12 +2747,10 @@ function restart(){
 }
 
 function boot(){
-  // 1. Отключаем восстановление скролла браузером
   if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
   }
 
-  // 2. Полный сброс стилей body (чтобы play.html не мешал игре)
   document.body.removeAttribute('style');
   document.body.style.display = 'block';
   document.body.style.padding = '0';
@@ -2736,12 +2760,11 @@ function boot(){
   document.body.style.minHeight = '100vh';
   document.body.style.overflowX = 'hidden';
   document.body.style.overflowY = 'auto';
+  document.body.style.overflowAnchor = 'none';
 
-  // 3. Строим DOM игры
   buildDOM();
   updStatus();
 
-  // 4. Инициализация звука при первом же действии пользователя
   var initAudio = function(){
     Audio2.init();
     document.removeEventListener('pointerdown', initAudio);
@@ -2752,10 +2775,8 @@ function boot(){
   document.addEventListener('keydown', initAudio);
   document.addEventListener('touchstart', initAudio);
 
-  // 5. Разные звуки на разные кнопки + страховочный init на каждый клик
   document.addEventListener('click', function(e){
-    Audio2.init();  // на случай если pointerdown не сработал
-
+    Audio2.init();
     var t = e.target;
     while (t && t !== document.body){
       if (t.classList && t.classList.contains('cbtn')){ Audio2.clickChoice(); return; }
@@ -2769,17 +2790,11 @@ function boot(){
     }
   });
 
-  // 6. Пауза звука при уходе со вкладки
   document.addEventListener('visibilitychange', function(){
     if (document.hidden) Audio2.setMuted(true);
-    else {
-      var userMuted = document.getElementById('dtog') ? false : false;
-      // Если хочешь отключить авто-возврат звука, когда пользователь сам его выключил — усложним позже
-      Audio2.setMuted(false);
-    }
+    else Audio2.setMuted(false);
   });
 
-  // 7. Первый рендер
   render('intro_lab');
 }
 
