@@ -3,12 +3,152 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Погружение</title>
+<meta name="theme-color" content="#07080c">
+<title>Погружение — проверка доступа</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&family=Oswald:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07080c; --ink:#d6dbe4; --ink-dim:#7a8290; --ink-faint:#3a404d;
+    --cyan:#5ee6e0; --danger:#ff2f4d;
+    --fdisp:'Oswald','Arial Narrow',sans-serif;
+    --fmono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--fmono);
+    min-height:100dvh; display:flex; align-items:center; justify-content:center;
+    padding:24px; overflow:hidden; -webkit-font-smoothing:antialiased;
+    position:relative;
+  }
+  body::before{
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(1000px 700px at 50% 30%, rgba(94,230,224,.07), transparent 60%),
+      radial-gradient(800px 600px at 80% 90%, rgba(255,47,77,.05), transparent 60%);
+    animation:breathe 8s ease-in-out infinite;
+  }
+  body::after{
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:9998;
+    background:
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.02) 0 1px, transparent 1px 3px),
+      radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.8) 100%);
+    mix-blend-mode:overlay;
+  }
+  @keyframes breathe{0%,100%{opacity:.8}50%{opacity:1}}
+
+  .panel{
+    position:relative; z-index:2;
+    max-width:560px; width:100%;
+    padding:56px 40px;
+    background:linear-gradient(180deg, rgba(12,14,21,.85), rgba(8,9,14,.9));
+    border:1px solid rgba(94,230,224,.15);
+    border-radius:3px;
+    text-align:center;
+    box-shadow:0 0 80px rgba(94,230,224,.06), inset 0 0 120px rgba(94,230,224,.03);
+    animation:panelIn .8s cubic-bezier(.2,.7,.2,1) forwards;
+    opacity:0; transform:translateY(14px);
+  }
+  @keyframes panelIn{to{opacity:1;transform:translateY(0)}}
+
+  .stamp{
+    display:inline-flex; align-items:center; gap:10px;
+    font-size:10px; letter-spacing:.3em; text-transform:uppercase;
+    color:var(--ink-dim); border:1px solid rgba(94,230,224,.18);
+    padding:7px 14px; border-radius:2px; background:rgba(94,230,224,.03);
+    margin-bottom:28px;
+  }
+  .stamp::before{
+    content:''; width:6px; height:6px; background:var(--danger); border-radius:50%;
+    box-shadow:0 0 10px var(--danger), 0 0 20px rgba(255,47,77,.5);
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
+
+  .sys{
+    font-size:12px; letter-spacing:.35em; text-transform:uppercase;
+    color:var(--cyan); margin-bottom:20px;
+  }
+  .sys::after{
+    content:''; display:inline-block; width:6px; height:14px;
+    background:var(--cyan); margin-left:8px; vertical-align:-2px;
+    animation:blink 1s steps(1) infinite;
+  }
+  @keyframes blink{50%{opacity:0}}
+
+  h1{
+    font-family:var(--fdisp); font-weight:500; font-size:34px;
+    letter-spacing:.15em; text-transform:uppercase; color:#fff;
+    margin-bottom:14px;
+    text-shadow:0 0 30px rgba(94,230,224,.3);
+  }
+  h1.err{
+    color:var(--danger);
+    text-shadow:0 0 30px rgba(255,47,77,.4);
+    animation:errFlick 3s linear infinite;
+  }
+  @keyframes errFlick{
+    0%,94%,100%{opacity:1}
+    95%{opacity:.6}
+    96%{opacity:.95}
+    97%{opacity:.7}
+  }
+
+  p{
+    font-size:13px; line-height:1.8; color:var(--ink-dim);
+    margin-bottom:28px; letter-spacing:.03em;
+  }
+
+  .btn{
+    display:inline-block;
+    padding:16px 40px;
+    font-family:var(--fdisp); font-size:13px; font-weight:500;
+    letter-spacing:.32em; text-transform:uppercase;
+    color:#fff; background:transparent;
+    border:1px solid rgba(94,230,224,.5);
+    cursor:pointer; position:relative; overflow:hidden;
+    transition:all .35s cubic-bezier(.2,.7,.2,1);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn::before{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(120deg, transparent, rgba(94,230,224,.2), transparent);
+    transform:translateX(-100%); transition:transform .6s cubic-bezier(.2,.7,.2,1);
+  }
+  .btn:hover::before{transform:translateX(100%)}
+  .btn:hover{
+    border-color:var(--cyan); color:var(--cyan);
+    box-shadow:0 0 24px rgba(94,230,224,.25), inset 0 0 24px rgba(94,230,224,.08);
+  }
+  .btn:active{transform:scale(.98)}
+  .btn:focus-visible{outline:2px solid var(--cyan); outline-offset:3px}
+  .btn span{position:relative; z-index:1}
+
+  .tag{
+    font-size:9px; letter-spacing:.3em; text-transform:uppercase;
+    color:var(--ink-faint); margin-top:32px;
+    padding-top:20px; border-top:1px solid rgba(255,255,255,.05);
+  }
+
+  @media (max-width:520px){
+    .panel{padding:40px 22px}
+    h1{font-size:24px; letter-spacing:.1em}
+    .btn{padding:14px 24px; font-size:12px; width:100%}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  }
+</style>
 </head>
 <body>
 
-<div id="boot" style="color:#b06bff;font-family:Consolas,monospace;padding:60px 20px;text-align:center;letter-spacing:2px;">
-  Проверка доступа…
+<div class="panel" id="panel">
+  <div class="stamp">PRIVATE DEMO</div>
+  <div class="sys" id="sysText">Проверка доступа</div>
+  <h1 id="sysTitle">ОЖИДАНИЕ</h1>
+  <p id="sysText2">Устанавливаем соединение с протоколом…</p>
 </div>
 
 <script>
@@ -30,13 +170,40 @@
   };
   var STORAGE_KEY = 'pogruzhenie_bindings';
 
+  var panel = document.getElementById('panel');
+  var sysText = document.getElementById('sysText');
+  var sysTitle = document.getElementById('sysTitle');
+  var sysText2 = document.getElementById('sysText2');
+
   function showError(title, reason) {
-    document.body.innerHTML =
-      '<div style="color:#c0392b;font-family:Consolas,monospace;padding:60px 20px;text-align:center;">' +
-        '<h2 style="letter-spacing:4px;">' + title + '</h2>' +
-        '<p style="color:#a0a0a8;margin-top:20px;font-size:13px;line-height:1.7;">' + reason + '</p>' +
-        '<p style="color:#40404a;margin-top:32px;font-size:11px;letter-spacing:2px;">PRIVATE DEMO · CONFIDENTIAL</p>' +
-      '</div>';
+    sysText.textContent = 'ОТКАЗАНО';
+    sysTitle.textContent = title;
+    sysTitle.classList.add('err');
+    sysText2.textContent = reason;
+  }
+
+  function showGranted(label, isOwner) {
+    sysText.textContent = isOwner ? 'ПОЛНЫЙ ДОСТУП' : 'ДОСТУП АКТИВИРОВАН';
+    sysTitle.textContent = label;
+    sysTitle.classList.remove('err');
+    sysText2.textContent = 'Протокол синхронизирован. Можно начинать погружение.';
+
+    var btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.type = 'button';
+    btn.innerHTML = '<span>Начать погружение</span>';
+    btn.addEventListener('click', function () {
+      btn.disabled = true;
+      btn.style.opacity = '.5';
+      btn.querySelector('span').textContent = 'Загрузка…';
+      loadGame();
+    });
+    panel.appendChild(btn);
+
+    var tag = document.createElement('div');
+    tag.className = 'tag';
+    tag.textContent = 'Конфиденциально · Не подлежит распространению';
+    panel.appendChild(tag);
   }
 
   var key = (new URLSearchParams(location.search).get('key') || '').trim();
@@ -61,31 +228,16 @@
   }
 
   function loadGame() {
-    var boot = document.getElementById('boot');
-    if (boot && boot.parentNode) boot.parentNode.removeChild(boot);
     var s = document.createElement('script');
     s.src = 'game.js';
     s.onerror = function () {
       showError('ОШИБКА ЗАГРУЗКИ', 'Файл game.js не найден рядом с play.html.');
     };
     document.body.appendChild(s);
+    panel.style.display = 'none';
   }
 
-  if (isOwner) {
-    loadGame();
-  } else {
-    document.body.innerHTML =
-      '<div style="position:fixed;inset:0;background:#0a0a0f;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#b06bff;font-family:Consolas,monospace;letter-spacing:3px;text-align:center;padding:20px;">' +
-        '<div style="font-size:11px;color:#707080;margin-bottom:20px;">PRIVATE DEMO</div>' +
-        '<div style="font-size:20px;margin-bottom:12px;">' + label + '</div>' +
-        '<div style="font-size:11px;color:#707080;margin-bottom:32px;">Доступ активирован</div>' +
-        '<button id="start-btn" style="background:#8a2be2;color:#fff;border:none;padding:14px 40px;font-family:inherit;font-size:12px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;border-radius:4px;">Начать</button>' +
-      '</div>';
-    document.getElementById('start-btn').addEventListener('click', function () {
-      document.body.innerHTML = '<div id="boot">…</div>';
-      loadGame();
-    });
-  }
+  showGranted(label, isOwner);
 })();
 </script>
 
