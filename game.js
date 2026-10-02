@@ -698,21 +698,6 @@ var Audio2 = (function(){
    РАСКРАСКА ИМЁН ПЕРСОНАЖЕЙ
    ============================================================ */
 function colorizeText(html){
-   function resetScroll(){
-  try {
-    var ae = document.activeElement;
-    if (ae && ae !== document.body && ae.blur) ae.blur();
-  } catch(e){}
-
-  var se = document.scrollingElement || document.documentElement || document.body;
-  if (se) se.scrollTop = 0;
-  if (document.documentElement) document.documentElement.scrollTop = 0;
-  if (document.body) document.body.scrollTop = 0;
-
-  try { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); }
-  catch(e){ window.scrollTo(0, 0); }
-  try { window.scroll(0, 0); } catch(e){}
-}
   if (!html) return '';
   html = html.replace(/<span class="voice">([^<]+?)<\/span>/g, function(m, name){
     var t = name.replace(/\s+/g, ' ').trim();
@@ -2599,8 +2584,7 @@ function render(id){
   if (!sc){ console.error('Сцена не найдена:', id); return; }
   if (sc.type === 'router'){ render(sc.resolve()); return; }
 
-  // Встроенный сброс скролла (без внешних функций)
-  var resetScroll = function(){
+  function resetScroll(){
     try {
       var ae = document.activeElement;
       if (ae && ae !== document.body && ae.blur) ae.blur();
@@ -2612,7 +2596,7 @@ function render(id){
     try { window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); }
     catch(e){ window.scrollTo(0, 0); }
     try { window.scroll(0, 0); } catch(e){}
-  };
+  }
 
   $scene.classList.add('fading-out');
 
@@ -2620,7 +2604,6 @@ function render(id){
     G.currentScene = id;
     updProgress(id);
 
-    // ============ КОНЦОВКА ============
     if (sc.type === 'ending'){
       renderEnding();
 
@@ -2644,7 +2627,6 @@ function render(id){
       return;
     }
 
-    // ============ ОБЫЧНАЯ СЦЕНА ============
     $scene.style.display = 'flex';
     $end.style.display = 'none';
     $title.textContent = sc.title || '';
@@ -2668,7 +2650,6 @@ function render(id){
     Audio2.tryPlayScreamer(id);
     if (SCREAMER_SCENES[id]) setTimeout(function(){ Audio2.heartbeat(); }, 900);
 
-    // Многоступенчатый сброс скролла (встроенный)
     resetScroll();
     requestAnimationFrame(function(){
       resetScroll();
