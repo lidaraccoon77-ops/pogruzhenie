@@ -2569,19 +2569,48 @@ function render(id){
   var sc = S[id];
   if (!sc){ console.error('Сцена не найдена:', id); return; }
   if (sc.type === 'router'){ render(sc.resolve()); return; }
-  G.currentScene = id;
-  updProgress(id);
-  if (sc.type === 'ending'){ renderEnding(); return; }
-  $scene.style.display = 'flex';
-  $end.style.display = 'none';
-  $title.textContent = sc.title || '';
-  $subtitle.textContent = sc.subtitle || '';
-  $text.innerHTML = sc.text || '';
-  $choices.innerHTML = '';
-  if (sc.type === 'story'){ $choices.appendChild(makeStoryButton(sc.next)); }
-  else if (sc.type === 'choice'){ for (var i = 0; i < sc.choices.length; i++) $choices.appendChild(makeChoiceButton(sc.choices[i])); }
-  else if (sc.type === 'resolve'){ $choices.appendChild(makeResolveButton()); }
-  updStatus();
+
+  $scene.classList.add('fading-out');
+
+  setTimeout(function(){
+    G.currentScene = id;
+    updProgress(id);
+
+    if (sc.type === 'ending'){
+      renderEnding();
+      $scene.classList.remove('fading-out');
+      return;
+    }
+
+    $scene.style.display = 'flex';
+    $end.style.display = 'none';
+    $title.textContent = sc.title || '';
+    $subtitle.textContent = sc.subtitle || '';
+    $text.innerHTML = colorizeText(sc.text || '');
+    $choices.innerHTML = '';
+
+    if (sc.type === 'story'){
+      $choices.appendChild(makeStoryButton(sc.next));
+    } else if (sc.type === 'choice'){
+      for (var i = 0; i < sc.choices.length; i++) $choices.appendChild(makeChoiceButton(sc.choices[i]));
+    } else if (sc.type === 'resolve'){
+      $choices.appendChild(makeResolveButton());
+    }
+
+    updStatus();
+    Audio2.whoosh();
+    Audio2.playSceneAmbient(id);
+    Audio2.tryPlayScreamer(id);
+    if (SCREAMER_SCENES[id]) setTimeout(function(){ Audio2.heartbeat(); }, 900);
+
+    window.scrollTo(0, 0);
+
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        $scene.classList.remove('fading-out');
+      });
+    });
+  }, 300);
 }
 
 function handleChoice(c){
@@ -2661,6 +2690,34 @@ function restart(){
 function boot(){
   buildDOM();
   updStatus();
+
+  var initAudio = function(){
+    Audio2.init();
+    document.removeEventListener('pointerdown', initAudio);
+    document.removeEventListener('keydown', initAudio);
+  };
+  document.addEventListener('pointerdown', initAudio);
+  document.addEventListener('keydown', initAudio);
+
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    while (t && t !== document.body){
+      if (t.classList && t.classList.contains('cbtn')){ Audio2.clickChoice(); return; }
+      if (t.classList && t.classList.contains('pbtn')){
+        if (t.id === 'restart') Audio2.clickRestart();
+        else Audio2.clickContinue();
+        return;
+      }
+      if (t.id === 'dtog'){ Audio2.clickToggle(); return; }
+      t = t.parentNode;
+    }
+  });
+
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) Audio2.setMuted(true);
+    else Audio2.setMuted(false);
+  });
+
   render('intro_lab');
 }
 
