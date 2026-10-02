@@ -79,6 +79,626 @@ var HTML = '<div id="app">' +
 '<div id="log"></div><div id="dbg"></div></div>';
 
 var S = {};
+   /* ============================================================
+   ЦВЕТА ПЕРСОНАЖЕЙ (яркие, читаемые)
+   ============================================================ */
+
+var CHARACTER_COLORS = {
+  'ЕЛЕНА ИВАНОВНА': '#7df0ff',
+  'ЕЛЕНА':          '#7df0ff',
+  'АЛЕКСАНДР СЕРГЕЕВИЧ': '#d18cff',
+  'АЛЕКСАНДР':      '#d18cff',
+  'ЕКАТЕРИНА':      '#ff9dc7',
+  'ИГОРЬ ВАСИЛЬЕВИЧ': '#ffd166',
+  'ИГОРЬ':          '#ffd166',
+  'РОМАН':          '#ff9c42',
+  'ВРАЧ':           '#6dc7ff',
+  'НАТАША':         '#ff9dd6',
+  'САША':           '#ffb3d9',
+  'ПАЦИЕНТ':        '#a7f97a',
+  'ВЕДУЩИЙ':        '#9d7fff',
+  'ЖУРНАЛИСТ':      '#ff9c42',
+  'МОНСТР/ИГОРЬ':   '#ff4757',
+  'МОНСТР':         '#ff4757',
+  'МЕДБРАТ':        '#b8c8dc',
+  'ПРОФЕССОР':      '#ffd166',
+  'МАМА':           '#ffd4a3',
+  'ГОЛОС В ГОЛОВЕ': '#ff4757',
+  'КУКЛЫ-МЕДСЁСТРЫ':'#e0e8f0',
+  'АКТЁР В ЧЁРНОМ': '#a896c8'
+};
+
+/* ============================================================
+   СКРИМЕРЫ (один раз за сеанс на сцену)
+   ============================================================ */
+
+var SCREAMER_SCENES = {
+  'j_branch_refuse':  'stab',
+  'j_branch_silence': 'stab',
+  't_patient1_hold':  'scream',
+  't_vrach':          'howl',
+  'pet_real':         'crash',
+  'pet_fake':         'crash',
+  'f_ek_1_1':         'crash',
+  'f_ek_1_3':         'crash',
+  'f_el_2_1':         'stab',
+  'f_el_2_3':         'stab',
+  't_experiment':     'drill',
+  't_lobotomy_task':  'drill',
+  'e32':              'scream'
+};
+
+/* ============================================================
+   АТМОСФЕРНЫЕ ЗВУКИ ПО СЦЕНАМ
+   ============================================================ */
+
+var SCENE_AMBIENT = {
+  'intro_lab':       'hospital',
+  'intro_rules':     'hospital',
+  'intro_dive':      'whispers',
+  'h_glory':         'applause',
+  'j_journalist':    'tv',
+  'j_branch_pay':    'tv',
+  'j_branch_refuse': 'tv',
+  'j_branch_silence':'tv',
+  'f_family':        'candle',
+  'd_diagnosis':     'hospital',
+  't_experiment':    'surgery',
+  't_vrach':         'strobe',
+  't_patient1':      'prison',
+  't_patient1_release':'prison',
+  't_patient1_hold': 'prison',
+  'pet_real':        'garden',
+  'pet_fake':        'garden',
+  't_lobotomy_task': 'surgery',
+  't_natasha':       'toys',
+  'f_ek_1_1':        'home_night',
+  'f_ek_1_2':        'home_night',
+  'f_ek_1_3':        'home_night',
+  'f_ek_1_4':        'home_night',
+  'f_el_2_1':        'home_night',
+  'f_el_2_2':        'home_night',
+  'f_el_2_3':        'home_night',
+  'f_el_2_4':        'home_night',
+  't_sasha_small':   'clock',
+  'resolve':         'heartbeat',
+  'ending':          'final'
+};
+
+/* ============================================================
+   ЗВУКОВОЙ ДВИЖОК
+   ============================================================ */
+
+var Audio2 = (function(){
+  var ctx, master, muted = false, started = false;
+  var playedScreamers = {};
+  var currentAmbient = null;
+
+  function init(){
+    if (started) return;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.0001;
+    master.connect(ctx.destination);
+    master.gain.exponentialRampToValueAtTime(0.07, ctx.currentTime + 3);
+    started = true;
+  }
+  function resume(){
+    if (!ctx) init();
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+  }
+  function setMuted(v){
+    muted = v;
+    if (!ctx || !master) return;
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.exponentialRampToValueAtTime(v ? 0.0001 : 0.07, ctx.currentTime + 0.3);
+  }
+  function noiseBuffer(dur){
+    var size = Math.max(1, Math.floor(ctx.sampleRate * dur));
+    var buf = ctx.createBuffer(1, size, ctx.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < size; i++) d[i] = Math.random() * 2 - 1;
+    return buf;
+  }
+  function burst(dur, vol, filterType, freq, q){
+    if (!ctx || muted) return;
+    var src = ctx.createBufferSource();
+    src.buffer = noiseBuffer(dur);
+    var filt = ctx.createBiquadFilter();
+    filt.type = filterType || 'bandpass';
+    filt.frequency.value = freq || 400;
+    filt.Q.value = q || 2.5;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    src.connect(filt).connect(g).connect(master);
+    src.start();
+  }
+  function tone(f1, f2, dur, vol, type){
+    if (!ctx || muted) return;
+    var o = ctx.createOscillator();
+    o.type = type || 'sawtooth';
+    var g = ctx.createGain();
+    o.frequency.setValueAtTime(f1, ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(f2, ctx.currentTime + dur);
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(vol, ctx.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g).connect(master);
+    o.start();
+    o.stop(ctx.currentTime + dur);
+  }
+  function blip(freq, dur, vol, type){
+    if (!ctx || muted) return;
+    var o = ctx.createOscillator();
+    var g = ctx.createGain();
+    o.type = type || 'square';
+    o.frequency.value = freq || 660;
+    dur = dur || 0.05; vol = vol || 0.025;
+    g.gain.setValueAtTime(vol, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g).connect(master);
+    o.start();
+    o.stop(ctx.currentTime + dur);
+  }
+  function whoosh(){
+    if (!ctx || muted) return;
+    var src = ctx.createBufferSource();
+    src.buffer = noiseBuffer(0.4);
+    var filt = ctx.createBiquadFilter();
+    filt.type = 'bandpass';
+    filt.frequency.setValueAtTime(200, ctx.currentTime);
+    filt.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.4);
+    filt.Q.value = 1.2;
+    var g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.06, ctx.currentTime + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+    src.connect(filt).connect(g).connect(master);
+    src.start();
+  }
+  function heartbeat(){
+    if (!ctx || muted) return;
+    for (var i = 0; i < 2; i++){
+      (function(idx){
+        setTimeout(function(){
+          if (!ctx || muted) return;
+          var o = ctx.createOscillator();
+          var g = ctx.createGain();
+          o.type = 'sine';
+          o.frequency.value = 42;
+          g.gain.setValueAtTime(0.0001, ctx.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.32, ctx.currentTime + 0.02);
+          g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.14);
+          o.connect(g).connect(master);
+          o.start();
+          o.stop(ctx.currentTime + 0.18);
+        }, idx * 170);
+      })(i);
+    }
+  }
+  function screamer(type){
+    if (!ctx || muted) return;
+    switch(type){
+      case 'scream':
+        burst(0.7, 0.5, 'bandpass', 1300, 1.5);
+        tone(900, 220, 0.6, 0.2, 'sawtooth');
+        setTimeout(function(){ burst(0.4, 0.35, 'highpass', 2500); }, 120);
+        break;
+      case 'stab':
+        burst(0.25, 0.55, 'highpass', 2200);
+        tone(1400, 350, 0.18, 0.18, 'square');
+        break;
+      case 'crash':
+        burst(0.55, 0.6, 'lowpass', 180);
+        tone(120, 35, 0.7, 0.28, 'sine');
+        break;
+      case 'howl':
+        tone(220, 55, 1.3, 0.18, 'sawtooth');
+        burst(1.0, 0.2, 'bandpass', 700);
+        break;
+      case 'drill':
+        for (var i = 0; i < 14; i++){
+          (function(idx){
+            setTimeout(function(){
+              if (!ctx || muted) return;
+              var o = ctx.createOscillator();
+              var g = ctx.createGain();
+              o.type = 'square';
+              o.frequency.value = 120 + Math.random() * 140;
+              g.gain.setValueAtTime(0.0001, ctx.currentTime);
+              g.gain.exponentialRampToValueAtTime(0.1, ctx.currentTime + 0.005);
+              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.07);
+              o.connect(g).connect(master);
+              o.start();
+              o.stop(ctx.currentTime + 0.1);
+            }, idx * 85);
+          })(i);
+        }
+        break;
+    }
+  }
+  function tryPlayScreamer(sceneId){
+    if (playedScreamers[sceneId]) return;
+    var type = SCREAMER_SCENES[sceneId];
+    if (!type) return;
+    playedScreamers[sceneId] = true;
+    setTimeout(function(){ screamer(type); }, 400);
+  }
+  function clickChoice(){ blip(740, 0.05, 0.03); }
+  function clickContinue(){ blip(420, 0.09, 0.04); }
+  function clickRestart(){ blip(300, 0.12, 0.05, 'sawtooth'); }
+  function clickToggle(){ blip(880, 0.04, 0.02, 'triangle'); }
+
+  function stopAmbient(){
+    if (!currentAmbient) return;
+    var nodes = currentAmbient.nodes, gain = currentAmbient.gain;
+    try {
+      gain.gain.cancelScheduledValues(ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+    } catch(e){}
+    setTimeout(function(){
+      nodes.forEach(function(n){ try { n.stop && n.stop(); n.disconnect && n.disconnect(); } catch(e){} });
+    }, 600);
+    currentAmbient = null;
+  }
+
+  function makeAmbient(type){
+    var nodes = [];
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.5, ctx.currentTime + 1.5);
+    gain.connect(master);
+    nodes.push(gain);
+
+    function osc(freq, t, vol){
+      var o = ctx.createOscillator(); o.type = t || 'sine'; o.frequency.value = freq;
+      var g = ctx.createGain(); g.gain.value = vol;
+      o.connect(g).connect(gain); o.start();
+      nodes.push(o); nodes.push(g);
+      return o;
+    }
+    function noiseLoop(vol, filtType, freq, q){
+      var src = ctx.createBufferSource();
+      src.buffer = noiseBuffer(2);
+      src.loop = true;
+      var f = ctx.createBiquadFilter();
+      f.type = filtType || 'bandpass'; f.frequency.value = freq || 400; f.Q.value = q || 1;
+      var g = ctx.createGain(); g.gain.value = vol;
+      src.connect(f).connect(g).connect(gain);
+      src.start();
+      nodes.push(src); nodes.push(f); nodes.push(g);
+      return src;
+    }
+
+    switch(type){
+      case 'hospital':
+        osc(60, 'sine', 0.18);
+        osc(120, 'triangle', 0.05);
+        noiseLoop(0.035, 'lowpass', 300, 0.7);
+        (function beepLoop(){
+          var beep = function(){
+            if (!currentAmbient || currentAmbient.type !== 'hospital') return;
+            if (ctx && !muted){
+              var o = ctx.createOscillator();
+              var g = ctx.createGain();
+              o.type = 'sine'; o.frequency.value = 1180;
+              g.gain.setValueAtTime(0.0001, ctx.currentTime);
+              g.gain.exponentialRampToValueAtTime(0.035, ctx.currentTime + 0.01);
+              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+              o.connect(g).connect(gain);
+              o.start(); o.stop(ctx.currentTime + 0.15);
+            }
+            setTimeout(beep, 1000);
+          };
+          setTimeout(beep, 800);
+        })();
+        break;
+      case 'whispers':
+        osc(48, 'sine', 0.15);
+        osc(48.4, 'sine', 0.12);
+        noiseLoop(0.05, 'bandpass', 900, 3);
+        (function whisperLoop(){
+          var next = function(){
+            if (!currentAmbient || currentAmbient.type !== 'whispers') return;
+            if (ctx && !muted){
+              var src = ctx.createBufferSource();
+              src.buffer = noiseBuffer(0.6);
+              var f = ctx.createBiquadFilter();
+              f.type = 'bandpass'; f.frequency.value = 600 + Math.random() * 800; f.Q.value = 5;
+              var g = ctx.createGain();
+              g.gain.setValueAtTime(0.0001, ctx.currentTime);
+              g.gain.exponentialRampToValueAtTime(0.05, ctx.currentTime + 0.15);
+              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.55);
+              src.connect(f).connect(g).connect(gain);
+              src.start();
+            }
+            setTimeout(next, 5000 + Math.random() * 9000);
+          };
+          setTimeout(next, 2500);
+        })();
+        break;
+      case 'applause':
+        osc(55, 'sine', 0.12);
+        noiseLoop(0.06, 'bandpass', 1400, 0.7);
+        (function applauseLoop(){
+          var next = function(){
+            if (!currentAmbient || currentAmbient.type !== 'applause') return;
+            if (ctx && !muted){
+              var src = ctx.createBufferSource();
+              src.buffer = noiseBuffer(1.6);
+              var f = ctx.createBiquadFilter();
+              f.type = 'bandpass'; f.frequency.value = 1500; f.Q.value = 0.6;
+              var g = ctx.createGain();
+              g.gain.setValueAtTime(0.0001, ctx.currentTime);
+              g.gain.exponentialRampToValueAtTime(0.09, ctx.currentTime + 0.15);
+              g.gain.exponentialRampToValueAtTime(0.03, ctx.currentTime + 0.9);
+              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.5);
+              src.connect(f).connect(g).connect(gain);
+              src.start();
+            }
+            setTimeout(next, 7000 + Math.random() * 8000);
+          };
+          setTimeout(next, 1200);
+        })();
+        break;
+      case 'tv':
+        osc(50, 'sine', 0.13);
+        noiseLoop(0.045, 'highpass', 1800, 0.6);
+        (function radioBeep(){
+          var next = function(){
+            if (!currentAmbient || currentAmbient.type !== 'tv') return;
+            if (ctx && !muted){
+              var o = ctx.createOscillator();
+              var g = ctx.createGain();
+              o.type = 'square'; o.frequency.value = 320 + Math.random() * 400;
+              g.gain.setValueAtTime(0.0001, ctx.currentTime);
+              g.gain.exponentialRampToValueAtTime(0.02, ctx.currentTime + 0.01);
+              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.2);
+              o.connect(g).connect(gain);
+              o.start(); o.stop(ctx.currentTime + 0.25);
+            }
+            setTimeout(next, 4000 + Math.random() * 6000);
+          };
+          setTimeout(next, 1500);
+        })();
+        break;
+      case 'candle':
+        osc(45, 'sine', 0.12);
+        (function crackle(){
+          var next = function(){
+            if (!currentAmbient || currentAmbient.type !== 'candle') return;
+            if (ctx && !muted){
+              var src = ctx.createBufferSource();
+              src.buffer = noiseBuffer(0.04);
+              var f = ctx.createBiquadFilter();
+              f.type = 'highpass'; f.frequency.value = 2500;
+              var g = ctx.createGain();
+              g.gain.setValueAtTime(0.0001, ctx.currentTime);
+              g.gain.exponentialRampToValueAtTime(0.035, ctx.currentTime + 0.003);
+              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.04);
+              src.connect(f).connect(g).connect(gain);
+              src.start();
+            }
+            setTimeout(next, 400 + Math.random() * 1400);
+          };
+          setTimeout(next, 300);
+        })();
+        break;
+      case 'surgery':
+        osc(60, 'sine', 0.15);
+        osc(125, 'triangle', 0.04);
+        noiseLoop(0.04, 'lowpass', 400, 0.7);
+        (function tools(){
+          var next = function(){
+            if (!currentAmbient || currentAmbient.type !== 'surgery') return;
+            if (ctx && !muted){
+              var o = ctx.createOscillator();
+              var g = ctx.createGain();
+              o.type = 'triangle'; o.frequency.value = 2200 + Math.random() * 1800;
+              g.gain.setValueAtTime(0.0001, ctx.currentTime);
+              g.gain.exponentialRampToValueAtTime(0.025, ctx.currentTime + 0.003);
+              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+              o.connect(g).connect(gain);
+              o.start(); o.stop(ctx.currentTime + 0.45);
+            }
+            setTimeout(next, 1800 + Math.random() * 3200);
+          };
+          setTimeout(next, 900);
+        })();
+        break;
+      case 'strobe':
+        osc(55, 'sine', 0.14);
+        noiseLoop(0.03, 'lowpass', 350, 0.6);
+        (function click(){
+          var next = function(){
+            if (!currentAmbient || currentAmbient.type !== 'strobe') return;
+            if (ctx && !muted){
+              var o = ctx.createOscillator();
+              var g = ctx.createGain();
+              o.type = 'square'; o.frequency.value = 160;
+              g.gain.setValueAtTime(0.0001, ctx.currentTime);
+              g.gain.exponentialRampToValueAtTime(0.05, ctx.currentTime + 0.003);
+              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.05);
+              o.connect(g).connect(gain);
+              o.start(); o.stop(ctx.currentTime + 0.06);
+            }
+            setTimeout(next, 950);
+          };
+          setTimeout(next, 500);
+        })();
+        break;
+      case 'prison':
+        osc(52, 'sine', 0.16);
+        osc(90, 'triangle', 0.04);
+        (function drop(){
+          var next = function(){
+            if (!currentAmbient || currentAmbient.type !== 'prison') return;
+            if (ctx && !muted){
+              var o = ctx.createOscillator();
+              var g = ctx.createGain();
+              o.type = 'sine'; o.frequency.value = 1400;
+              o.frequency.exponentialRampToValueAtTime(280, ctx.currentTime + 0.15);
+              g.gain.setValueAtTime(0.0001, ctx.currentTime);
+              g.gain.exponentialRampToValueAtTime(0.05, ctx.currentTime + 0.005);
+              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+              o.connect(g).connect(gain);
+              o.start(); o.stop(ctx.currentTime + 0.2);
+            }
+            setTimeout(next, 2200 + Math.random() * 3500);
+          };
+          setTimeout(next, 800);
+        })();
+        break;
+      case 'garden':
+        osc(45, 'sine', 0.16);
+        osc(48, 'sine', 0.11);
+        noiseLoop(0.035, 'bandpass', 600, 1.2);
+        (function dog(){
+          var next = function(){
+            if (!currentAmbient || currentAmbient.type !== 'garden') return;
+            if (ctx && !muted){
+              var o = ctx.createOscillator();
+              var g = ctx.createGain();
+              o.type = 'sawtooth'; o.frequency.value = 280;
+              g.gain.setValueAtTime(0.0001, ctx.currentTime);
+              g.gain.exponentialRampToValueAtTime(0.04, ctx.currentTime + 0.01);
+              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+              o.connect(g).connect(gain);
+              o.start(); o.stop(ctx.currentTime + 0.15);
+            }
+            setTimeout(next, 6000 + Math.random() * 9000);
+          };
+          setTimeout(next, 3000);
+        })();
+        break;
+      case 'toys':
+        osc(70, 'sine', 0.12);
+        noiseLoop(0.025, 'highpass', 2400, 0.8);
+        (function chime(){
+          var next = function(){
+            if (!currentAmbient || currentAmbient.type !== 'toys') return;
+            if (ctx && !muted){
+              var notes = [523, 659, 784, 988];
+              var n = notes[Math.floor(Math.random() * notes.length)];
+              var o = ctx.createOscillator();
+              var g = ctx.createGain();
+              o.type = 'sine'; o.frequency.value = n;
+              g.gain.setValueAtTime(0.0001, ctx.currentTime);
+              g.gain.exponentialRampToValueAtTime(0.04, ctx.currentTime + 0.02);
+              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.1);
+              o.connect(g).connect(gain);
+              o.start(); o.stop(ctx.currentTime + 1.2);
+            }
+            setTimeout(next, 3500 + Math.random() * 5000);
+          };
+          setTimeout(next, 1500);
+        })();
+        break;
+      case 'home_night':
+        osc(48, 'sine', 0.14);
+        osc(60, 'sine', 0.06);
+        noiseLoop(0.02, 'lowpass', 250, 0.7);
+        break;
+      case 'clock':
+        osc(42, 'sine', 0.12);
+        (function tick(){
+          var next = function(){
+            if (!currentAmbient || currentAmbient.type !== 'clock') return;
+            if (ctx && !muted){
+              var src = ctx.createBufferSource();
+              src.buffer = noiseBuffer(0.02);
+              var f = ctx.createBiquadFilter();
+              f.type = 'bandpass'; f.frequency.value = 3000; f.Q.value = 8;
+              var g = ctx.createGain();
+              g.gain.setValueAtTime(0.0001, ctx.currentTime);
+              g.gain.exponentialRampToValueAtTime(0.03, ctx.currentTime + 0.002);
+              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.02);
+              src.connect(f).connect(g).connect(gain);
+              src.start();
+            }
+            setTimeout(next, 1000);
+          };
+          setTimeout(next, 300);
+        })();
+        noiseLoop(0.03, 'highpass', 2000, 0.5);
+        break;
+      case 'heartbeat':
+        osc(50, 'sine', 0.15);
+        (function beat(){
+          var next = function(){
+            if (!currentAmbient || currentAmbient.type !== 'heartbeat') return;
+            if (ctx && !muted){
+              var o = ctx.createOscillator();
+              var g = ctx.createGain();
+              o.type = 'sine'; o.frequency.value = 42;
+              g.gain.setValueAtTime(0.0001, ctx.currentTime);
+              g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.02);
+              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.15);
+              o.connect(g).connect(gain);
+              o.start(); o.stop(ctx.currentTime + 0.2);
+            }
+            setTimeout(next, 900);
+          };
+          setTimeout(next, 400);
+        })();
+        break;
+      case 'final':
+        osc(38, 'sine', 0.18);
+        osc(38.5, 'sine', 0.14);
+        osc(76, 'triangle', 0.05);
+        noiseLoop(0.04, 'lowpass', 220, 0.6);
+        break;
+      default:
+        osc(48, 'sine', 0.14);
+        noiseLoop(0.03, 'lowpass', 300, 0.7);
+    }
+
+    currentAmbient = { type: type, nodes: nodes, gain: gain };
+  }
+
+  function playSceneAmbient(sceneId){
+    if (!ctx) return;
+    var type = SCENE_AMBIENT[sceneId] || 'default';
+    if (currentAmbient && currentAmbient.type === type) return;
+    stopAmbient();
+    setTimeout(function(){ if (ctx && !muted) makeAmbient(type); }, 400);
+  }
+  function stopAll(){ stopAmbient(); }
+
+  return {
+    init: resume, resume: resume, setMuted: setMuted,
+    isMuted: function(){ return muted; },
+    blip: blip, whoosh: whoosh, heartbeat: heartbeat,
+    screamer: screamer, tryPlayScreamer: tryPlayScreamer,
+    playSceneAmbient: playSceneAmbient, stopAll: stopAll,
+    clickChoice: clickChoice, clickContinue: clickContinue,
+    clickRestart: clickRestart, clickToggle: clickToggle
+  };
+})();
+
+/* ============================================================
+   РАСКРАСКА ИМЁН ПЕРСОНАЖЕЙ
+   ============================================================ */
+function colorizeText(html){
+  if (!html) return '';
+  html = html.replace(/<span class="voice">([^<]+?)<\/span>/g, function(m, name){
+    var t = name.replace(/\s+/g, ' ').trim();
+    var hasColon = t.charAt(t.length - 1) === ':';
+    var clean = hasColon ? t.slice(0, -1).trim() : t;
+    var color = CHARACTER_COLORS[clean] || '#5ee6e0';
+    return '<span class="voice" style="color:' + color + ';text-shadow:0 0 14px ' + color + '80">' + name + '</span>';
+  });
+  html = html.replace(/<span class="danger">([^<]+?):<\/span>/g, function(m, name){
+    var t = name.replace(/\s+/g, ' ').trim();
+    var color = CHARACTER_COLORS[t] || '#ff4757';
+    return '<span class="voice" style="color:' + color + ';text-shadow:0 0 14px ' + color + '80">' + name + ':</span>';
+  });
+  return html;
+}
 
 /* ============================================================
    АКТ I. ПОГРУЖЕНИЕ В ЛАБОРАТОРИЮ
