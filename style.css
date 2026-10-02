@@ -1,5 +1,5 @@
 /* =========================================================
-   ПОГРУЖЕНИЕ — визуальная система лендинга
+   ПОГРУЖЕНИЕ — стили лендинга
    ========================================================= */
 
 :root {
@@ -11,10 +11,8 @@
   --cyan:      #5ee6e0;
   --cyan-dim:  #2b6d6b;
   --danger:    #ff2f4d;
-
   --font-display: 'Oswald', 'Arial Narrow', sans-serif;
   --font-mono:    'JetBrains Mono', ui-monospace, monospace;
-
   --ease: cubic-bezier(.2, .7, .2, 1);
 }
 
@@ -43,11 +41,7 @@ body::before {
   z-index: 0;
   animation: breathe 9s ease-in-out infinite;
 }
-
-@keyframes breathe {
-  0%, 100% { opacity: .8; }
-  50%      { opacity: 1; }
-}
+@keyframes breathe { 0%,100%{opacity:.8} 50%{opacity:1} }
 
 .grain {
   position: fixed; inset: -50%;
@@ -68,13 +62,9 @@ body::before {
 
 .scanlines {
   position: fixed; inset: 0;
-  background: repeating-linear-gradient(
-    to bottom,
-    rgba(255,255,255,.02) 0px,
-    rgba(255,255,255,.02) 1px,
-    transparent 1px,
-    transparent 3px
-  );
+  background: repeating-linear-gradient(to bottom,
+    rgba(255,255,255,.02) 0px, rgba(255,255,255,.02) 1px,
+    transparent 1px, transparent 3px);
   mix-blend-mode: overlay;
   pointer-events: none;
   z-index: 9997;
@@ -103,12 +93,9 @@ body::before {
 }
 
 .stage {
-  position: relative;
-  z-index: 2;
+  position: relative; z-index: 2;
   min-height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   padding: clamp(24px, 5vw, 64px);
 }
 
@@ -127,42 +114,33 @@ body::before {
 .stage .frame > *:nth-child(8)  { animation-delay: .85s; }
 .stage .frame > *:nth-child(9)  { animation-delay: 1s; }
 .stage .frame > *:nth-child(10) { animation-delay: 1.15s; }
-
 @keyframes rise { to { opacity: 1; transform: translateY(0); } }
 
 .frame {
-  max-width: 720px;
-  width: 100%;
+  max-width: 720px; width: 100%;
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-  align-items: center;
+  display: flex; flex-direction: column;
+  gap: 22px; align-items: center;
 }
 
 .badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 11px;
-  letter-spacing: .28em;
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 11px; letter-spacing: .28em;
   color: var(--ink-dim);
   border: 1px solid rgba(94,230,224,.18);
-  padding: 8px 14px;
-  border-radius: 2px;
+  padding: 8px 14px; border-radius: 2px;
   background: rgba(94,230,224,.03);
   text-transform: uppercase;
 }
 .badge__dot {
   width: 6px; height: 6px;
-  background: var(--danger);
-  border-radius: 50%;
+  background: var(--danger); border-radius: 50%;
   box-shadow: 0 0 10px var(--danger), 0 0 20px rgba(255,47,77,.5);
   animation: pulse 1.6s ease-in-out infinite;
 }
 @keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%      { opacity: .35; transform: scale(.8); }
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%     { opacity: .35; transform: scale(.8); }
 }
 
 .title {
@@ -176,42 +154,37 @@ body::before {
   text-shadow: 0 0 30px rgba(94,230,224,.25), 0 0 60px rgba(94,230,224,.12);
   animation: rise .9s var(--ease) forwards, flicker 6s 1.5s infinite;
 }
-.title::before,
-.title::after {
+.title::before, .title::after {
   content: attr(data-text);
-  position: absolute;
-  inset: 0;
-  color: inherit;
-  pointer-events: none;
+  position: absolute; inset: 0;
+  color: inherit; pointer-events: none;
 }
 .title::before {
-  color: var(--cyan);
-  mix-blend-mode: screen;
+  color: var(--cyan); mix-blend-mode: screen;
   animation: glitch1 4s infinite;
   clip-path: polygon(0 10%, 100% 10%, 100% 35%, 0 35%);
 }
 .title::after {
-  color: var(--danger);
-  mix-blend-mode: screen;
+  color: var(--danger); mix-blend-mode: screen;
   animation: glitch2 3.2s infinite;
   clip-path: polygon(0 55%, 100% 55%, 100% 80%, 0 80%);
 }
 @keyframes flicker {
-  0%, 96%, 100% { opacity: 1; }
-  97%           { opacity: .75; }
-  98%           { opacity: .95; }
+  0%,96%,100% { opacity: 1; }
+  97%         { opacity: .75; }
+  98%         { opacity: .95; }
 }
 @keyframes glitch1 {
-  0%, 92%, 100% { transform: translate(0,0); opacity: 0; }
-  93%           { transform: translate(-3px, 1px); opacity: .8; }
-  95%           { transform: translate(3px, -2px); opacity: .6; }
-  97%           { transform: translate(-2px, 0); opacity: .5; }
+  0%,92%,100% { transform: translate(0,0); opacity: 0; }
+  93%         { transform: translate(-3px,1px); opacity: .8; }
+  95%         { transform: translate(3px,-2px); opacity: .6; }
+  97%         { transform: translate(-2px,0); opacity: .5; }
 }
 @keyframes glitch2 {
-  0%, 90%, 100% { transform: translate(0,0); opacity: 0; }
-  91%           { transform: translate(3px, -1px); opacity: .7; }
-  94%           { transform: translate(-3px, 2px); opacity: .5; }
-  96%           { transform: translate(2px, -1px); opacity: .4; }
+  0%,90%,100% { transform: translate(0,0); opacity: 0; }
+  91%         { transform: translate(3px,-1px); opacity: .7; }
+  94%         { transform: translate(-3px,2px); opacity: .5; }
+  96%         { transform: translate(2px,-1px); opacity: .4; }
 }
 
 .subtitle {
@@ -231,8 +204,7 @@ body::before {
 }
 .divider::after {
   content: '';
-  position: absolute;
-  left: 50%; top: 50%;
+  position: absolute; left: 50%; top: 50%;
   width: 4px; height: 4px;
   background: var(--cyan);
   transform: translate(-50%,-50%) rotate(45deg);
@@ -251,16 +223,12 @@ body::before {
   width: 100%; max-width: 520px;
   aspect-ratio: 16 / 9;
   border: 1px solid rgba(94,230,224,.15);
-  background:
-    linear-gradient(135deg, rgba(94,230,224,.05), rgba(255,47,77,.04)),
-    #0a0b10;
+  background: linear-gradient(135deg, rgba(94,230,224,.05), rgba(255,47,77,.04)), #0a0b10;
   overflow: hidden;
   box-shadow: 0 0 40px rgba(0,0,0,.6), inset 0 0 60px rgba(94,230,224,.06);
 }
 .cover img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  display: block;
+  width: 100%; height: 100%; object-fit: cover; display: block;
   filter: grayscale(.3) contrast(1.1) brightness(.85);
   transition: filter 1.2s var(--ease), transform 8s linear;
 }
@@ -277,30 +245,21 @@ body::before {
 }
 .cover--empty img { display: none; }
 .cover--empty::before {
-  content: '';
-  position: absolute; inset: 0;
+  content: ''; position: absolute; inset: 0;
   background:
     radial-gradient(circle at 50% 50%, rgba(94,230,224,.15), transparent 60%),
     repeating-linear-gradient(45deg, rgba(255,255,255,.02) 0 8px, transparent 8px 16px);
 }
-
 .cover__heartbeat {
-  position: absolute;
-  bottom: 12px; left: 0; right: 0;
-  height: 40px;
-  opacity: .85;
-  pointer-events: none;
+  position: absolute; bottom: 12px; left: 0; right: 0; height: 40px;
+  opacity: .85; pointer-events: none;
 }
 .cover__heartbeat svg { width: 100%; height: 100%; }
 .ecg {
-  fill: none;
-  stroke: var(--cyan);
-  stroke-width: 1.5;
-  stroke-linejoin: round;
-  stroke-linecap: round;
+  fill: none; stroke: var(--cyan); stroke-width: 1.5;
+  stroke-linejoin: round; stroke-linecap: round;
   filter: drop-shadow(0 0 6px rgba(94,230,224,.9));
-  stroke-dasharray: 400;
-  stroke-dashoffset: 400;
+  stroke-dasharray: 400; stroke-dashoffset: 400;
   animation: ecg 3s linear infinite;
 }
 @keyframes ecg {
@@ -318,31 +277,20 @@ body::before {
   margin-top: 6px;
 }
 .meta li {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  text-align: left;
-  font-size: 13px;
-  color: var(--ink);
+  display: flex; flex-direction: column; gap: 3px;
+  text-align: left; font-size: 13px; color: var(--ink);
   padding: 10px 12px;
   border-left: 1px solid rgba(94,230,224,.25);
   background: linear-gradient(to right, rgba(94,230,224,.03), transparent);
 }
 .meta li span {
-  font-size: 9px;
-  letter-spacing: .3em;
-  color: var(--ink-faint);
-  text-transform: uppercase;
+  font-size: 9px; letter-spacing: .3em;
+  color: var(--ink-faint); text-transform: uppercase;
 }
 
-/* Ввод ключа + кнопка */
 .enter {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-  max-width: 520px;
-  margin-top: 8px;
+  display: flex; flex-direction: column; gap: 12px;
+  width: 100%; max-width: 520px; margin-top: 8px;
 }
 
 .key-input {
@@ -369,36 +317,26 @@ body::before {
 
 .btn {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
   padding: 18px 42px;
   font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 500;
-  letter-spacing: .35em;
-  text-transform: uppercase;
-  color: #fff;
-  background: transparent;
+  font-size: 15px; font-weight: 500;
+  letter-spacing: .35em; text-transform: uppercase;
+  color: #fff; background: transparent;
   border: 1px solid rgba(94,230,224,.5);
-  cursor: pointer;
-  overflow: hidden;
+  cursor: pointer; overflow: hidden;
   transition: color .35s var(--ease), border-color .35s var(--ease), transform .2s var(--ease);
   -webkit-tap-highlight-color: transparent;
   width: 100%;
 }
 .btn::before {
-  content: '';
-  position: absolute; inset: 0;
+  content: ''; position: absolute; inset: 0;
   background: linear-gradient(120deg, transparent, rgba(94,230,224,.18), transparent);
-  transform: translateX(-100%);
-  transition: transform .6s var(--ease);
+  transform: translateX(-100%); transition: transform .6s var(--ease);
 }
 .btn:hover::before { transform: translateX(100%); }
 .btn:hover {
-  border-color: var(--cyan);
-  color: var(--cyan);
+  border-color: var(--cyan); color: var(--cyan);
   box-shadow: 0 0 24px rgba(94,230,224,.25), inset 0 0 24px rgba(94,230,224,.08);
 }
 .btn:active { transform: scale(.98); }
@@ -412,25 +350,20 @@ body::before {
   pointer-events: none;
 }
 @keyframes btnGlow {
-  0%, 100% { opacity: 0; transform: scale(1); }
-  50%      { opacity: .6; transform: scale(1.02); }
+  0%,100% { opacity: 0; transform: scale(1); }
+  50%     { opacity: .6; transform: scale(1.02); }
 }
 
 .hint {
-  font-size: 11px;
-  color: var(--ink-faint);
-  letter-spacing: .15em;
-  text-transform: uppercase;
+  font-size: 11px; color: var(--ink-faint);
+  letter-spacing: .15em; text-transform: uppercase;
   margin-top: 4px;
 }
 
 .footer {
-  font-size: 10px;
-  letter-spacing: .25em;
-  color: var(--ink-faint);
-  text-transform: uppercase;
-  margin-top: 6px;
-  padding-top: 18px;
+  font-size: 10px; letter-spacing: .25em;
+  color: var(--ink-faint); text-transform: uppercase;
+  margin-top: 6px; padding-top: 18px;
   border-top: 1px solid rgba(255,255,255,.05);
   width: 100%; max-width: 520px;
 }
