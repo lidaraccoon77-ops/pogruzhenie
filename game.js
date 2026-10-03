@@ -19,8 +19,9 @@ var SOUND_FILES = {
   'amb_t_patient1_hold':   'assets/audio/12.%20ambient_Pacient%E2%84%961Ne_vypuskat.mp3',
   'amb_pet':               'assets/audio/13.%20ambient_Gibel_pitomca.mp3',
   'amb_t_lobotomy':        'assets/audio/14.%20ambient_Lobotomiya.mp3',
-  'amb_t_natasha':         'assets/audio/16.%20ambient_Natasha.mp3',
-  'amb_t_sasha_small':     'assets/audio/17.%20ambient_Sasha%20melkij.mp3',
+    'amb_t_sasha_small':  'assets/audio/17.%20ambient_Sasha%20melkij.mp3',
+  'amb_t_natasha':      'assets/audio/ambient_Natasha_new.mp3',
+  'amb_d_diagnosis':    'assets/audio/ambient_Diagnoz.mp3',
 
   // ==== Клики по выборам ====
   'click_hero':       'assets/audio/click_choice_On_geroj.mp3',
