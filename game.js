@@ -184,7 +184,66 @@ var SCENE_AMBIENT = {
    ЗВУКОВОЙ ДВИЖОК
    ============================================================ */
 
-var Audio2 = (function(){
+var Mp3 = (function(){
+  var cache = {};
+  var ambientAudio = null;
+
+  function load(name){
+    if (cache[name]) return cache[name];
+    var path = SOUND_FILES[name];
+    if (!path) return null;
+    var a = new Audio();
+    a.src = path;
+    a.preload = 'auto';
+    cache[name] = a;
+    return a;
+  }
+  function exists(name){ return !!SOUND_FILES[name]; }
+  function preloadAll(){ for (var n in SOUND_FILES) { load(n); } }
+
+  function play(name, volume){
+    if (!exists(name)) return false;
+    try {
+      var a = load(name);
+      if (!a) return false;
+      var c = a.cloneNode();
+      c.volume = (typeof volume === 'number') ? volume : 0.9;
+      var p = c.play();
+      if (p && p.catch) p.catch(function(){});
+      return true;
+    } catch(e){ return false; }
+  }
+  function playLoop(name, volume){
+    if (!exists(name)) return false;
+    stopLoop();
+    try {
+      var a = load(name);
+      if (!a) return false;
+      ambientAudio = a.cloneNode();
+      ambientAudio.loop = true;
+      ambientAudio.volume = (typeof volume === 'number') ? volume : 0.4;
+      var p = ambientAudio.play();
+      if (p && p.catch) p.catch(function(){});
+      return true;
+    } catch(e){ return false; }
+  }
+  function stopLoop(){
+    if (ambientAudio){
+      try { ambientAudio.pause(); ambientAudio.currentTime = 0; } catch(e){}
+      ambientAudio = null;
+    }
+  }
+  function setMuted(v){
+    if (ambientAudio){
+      try { ambientAudio.volume = v ? 0 : 0.4; } catch(e){}
+    }
+  }
+  return {
+    preloadAll: preloadAll, play: play, playLoop: playLoop,
+    stopLoop: stopLoop, setMuted: setMuted, exists: exists
+  };
+})();
+   var Audio2 = (function(){
   var ctx, master, muted = false, started = false;
   var playedScreamers = {};
   var currentAmbient = null;
@@ -303,46 +362,11 @@ var Audio2 = (function(){
       })(i);
     }
   }
-  function screamer(type){
-    if (!ctx || muted) return;
-    switch(type){
-      case 'scream':
-        burst(0.7, 0.5, 'bandpass', 1300, 1.5);
-        tone(900, 220, 0.6, 0.2, 'sawtooth');
-        setTimeout(function(){ burst(0.4, 0.35, 'highpass', 2500); }, 120);
-        break;
-      case 'stab':
-        burst(0.25, 0.55, 'highpass', 2200);
-        tone(1400, 350, 0.18, 0.18, 'square');
-        break;
-      case 'crash':
-        burst(0.55, 0.6, 'lowpass', 180);
-        tone(120, 35, 0.7, 0.28, 'sine');
-        break;
-      case 'howl':
-        tone(220, 55, 1.3, 0.18, 'sawtooth');
-        burst(1.0, 0.2, 'bandpass', 700);
-        break;
-      case 'drill':
-        for (var i = 0; i < 14; i++){
-          (function(idx){
-            setTimeout(function(){
-              if (!ctx || muted) return;
-              var o = ctx.createOscillator();
-              var g = ctx.createGain();
-              o.type = 'square';
-              o.frequency.value = 120 + Math.random() * 140;
-              g.gain.setValueAtTime(0.0001, ctx.currentTime);
-              g.gain.exponentialRampToValueAtTime(0.1, ctx.currentTime + 0.005);
-              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.07);
-              o.connect(g).connect(master);
-              o.start();
-              o.stop(ctx.currentTime + 0.1);
-            }, idx * 85);
-          })(i);
-        }
-        break;
-    }
+    function screamer(type){
+    // Скримеры пока отключены — ты их добавишь позже.
+    // Если когда-нибудь появится файл screamer_stab.mp3 и т.п. — заиграет он.
+    if (Mp3.play('screamer_' + type, 1.0)) return;
+    return;
   }
   function tryPlayScreamer(sceneId){
     if (playedScreamers[sceneId]) return;
@@ -351,8 +375,28 @@ var Audio2 = (function(){
     playedScreamers[sceneId] = true;
     setTimeout(function(){ screamer(type); }, 400);
   }
-  function clickChoice(){ blip(740, 0.05, 0.03); }
-  function clickContinue(){ blip(420, 0.09, 0.04); }
+    function clickChoice(btn){
+    var text = btn ? (btn.textContent || '') : '';
+
+    if (/герой|верим/i.test(text) && Mp3.play('click_hero', 0.8)) return;
+    if (/не знаем|правду|скажите правд/i.test(text) && Mp3.play('click_truth', 0.8)) return;
+    if (/взять папку/i.test(text) && Mp3.play('click_take_folder', 0.8)) return;
+    if (/не брать|отказать/i.test(text) && Mp3.play('click_no_folder', 0.8)) return;
+    if (/аборт/i.test(text) && Mp3.play('click_abort', 0.8)) return;
+    if (/семья|попробуем/i.test(text) && Mp3.play('click_family', 0.8)) return;
+    if (/ключи|дешево/i.test(text) && Mp3.play('click_keys', 0.8)) return;
+    if (/не выпускать/i.test(text) && Mp3.play('click_hold', 0.8)) return;
+    if (/выпустить/i.test(text) && Mp3.play('click_release', 0.8)) return;
+
+    if (Mp3.play('click_next', 0.7)) return;
+    blip(740, 0.05, 0.03);
+  }
+    function clickContinue(){
+    var variants = ['click_next', 'click_next2', 'click_next3'];
+    var name = variants[Math.floor(Math.random() * variants.length)];
+    if (Mp3.play(name, 0.7)) return;
+    blip(420, 0.09, 0.04);
+  }
   function clickRestart(){ blip(300, 0.12, 0.05, 'sawtooth'); }
   function clickToggle(){ blip(880, 0.04, 0.02, 'triangle'); }
 
@@ -683,12 +727,10 @@ var Audio2 = (function(){
     currentAmbient = { type: type, nodes: nodes, gain: gain };
   }
 
-  function playSceneAmbient(sceneId){
-    if (!ctx) return;
-    var type = SCENE_AMBIENT[sceneId] || 'default';
-    if (currentAmbient && currentAmbient.type === type) return;
-    stopAmbient();
-    setTimeout(function(){ if (ctx && !muted) makeAmbient(type); }, 400);
+    function playSceneAmbient(sceneId){
+    var name = SCENE_AMBIENT[sceneId];
+    if (name && Mp3.playLoop(name, 0.4)) return;
+    return;
   }
   function stopAll(){ stopAmbient(); }
 
@@ -2751,6 +2793,7 @@ function restart(){
 }
 
 function boot(){
+     Mp3.preloadAll();
   if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
   }
@@ -2783,7 +2826,7 @@ function boot(){
     Audio2.init();
     var t = e.target;
     while (t && t !== document.body){
-      if (t.classList && t.classList.contains('cbtn')){ Audio2.clickChoice(); return; }
+      if (t.classList && t.classList.contains('cbtn')){ Audio2.clickChoice(t); return; }
       if (t.classList && t.classList.contains('pbtn')){
         if (t.id === 'restart') Audio2.clickRestart();
         else Audio2.clickContinue();
