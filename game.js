@@ -14,10 +14,12 @@ var SOUND_FILES = {
 'amb_h_glory_3': 'assets/audio/5.3%20ambient_Zal_slavy.mp3',
   'amb_t_vrach':           'assets/audio/6.%20ambient_Vrach.mp3',
   'amb_j_journalist':      'assets/audio/7.%20ambient_Zhurnalist.mp3',
+     'amb_j_refuse':        'assets/audio/Zhurnalist_ne_dat_dengi.mp3',
   'amb_f_family':          'assets/audio/8.%20ambient_Semejnaya_idilliya.mp3',
   'amb_t_experiment':      'assets/audio/9.%20ambient_Eksperiment_nad_igrokom.mp3',
   'amb_t_patient1':        'assets/audio/10.%20ambient_Pacient%E2%84%961.mp3',
-  'amb_t_patient1_rel':    'assets/audio/11.%20ambient_Pacient%E2%84%961Vypustit.mp3',
+    'amb_t_patient1_rel':   'assets/audio/11.%20ambient_Pacient%E2%84%961Vypustit.MP3',
+  'amb_t_patient1_rel_2': 'assets/audio/11.%20ambient_Pacient%E2%84%961Vypustit2.mp3.MP3',
   'amb_t_patient1_hold':   'assets/audio/12.%20ambient_Pacient%E2%84%961Ne_vypuskat.mp3',
   'amb_pet':               'assets/audio/13.%20ambient_Gibel_pitomca.mp3',
   'amb_t_lobotomy':        'assets/audio/14.%20ambient_Lobotomiya.mp3',
@@ -174,7 +176,7 @@ var SCENE_AMBIENT = {
   // === Индива Журналист ===
   'j_journalist':        'amb_j_journalist',
   'j_branch_pay':        'amb_j_journalist',
-  'j_branch_refuse':     'amb_j_journalist',
+   'j_branch_refuse':     'amb_j_refuse',
   'j_branch_silence':    'amb_j_journalist',
 
   // === Семейная идиллия ===
@@ -198,7 +200,6 @@ var SCENE_AMBIENT = {
 
   // === Индива Пациент №1 (не брать папку) ===
   't_patient1':          'amb_t_patient1',
-  't_patient1_release':  'amb_t_patient1_rel',
   't_patient1_hold':     'amb_t_patient1_hold',
 
   // === Гибель питомца ===
@@ -220,7 +221,8 @@ var SCENE_AMBIENT = {
 };
 
 var SCENE_PLAYLISTS = {
-  'h_glory': ['amb_h_glory_1', 'amb_h_glory_2', 'amb_h_glory_3']
+  'h_glory':            ['amb_h_glory_1', 'amb_h_glory_2', 'amb_h_glory_3'],
+  't_patient1_release': ['amb_t_patient1_rel', 'amb_t_patient1_rel_2']
 };
 
 /* ============================================================
