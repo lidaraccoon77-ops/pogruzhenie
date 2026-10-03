@@ -165,33 +165,54 @@ var SCREAMER_SCENES = {
    ============================================================ */
 
 var SCENE_AMBIENT = {
-  'intro_lab':          'amb_intro_lab',
-  'intro_rules':        'amb_intro_rules',
-  'intro_dive':         'amb_intro_dive',
-  'h_glory':            'amb_h_glory_1',
-  't_vrach':            'amb_t_vrach',
-  'j_journalist':       'amb_j_journalist',
-  'f_family':           'amb_f_family',
-  'd_diagnosis':        'amb_d_diagnosis',
-  't_experiment':       'amb_t_experiment',
-  't_patient1':         'amb_t_patient1',
-  't_patient1_release': 'amb_t_patient1_rel',
-  't_patient1_hold':    'amb_t_patient1_hold',
-  'pet_real':           'amb_pet',
-  'pet_fake':           'amb_pet',
-  't_lobotomy_task':    'amb_t_lobotomy',
-  't_natasha':          'amb_t_natasha',
-  't_sasha_small':      'amb_t_sasha_small',
+  'intro_lab':           'amb_intro_lab',
+  'intro_rules':         'amb_intro_rules',
+  'intro_dive':          'amb_intro_dive',
+  'h_glory':             'amb_h_glory_1',
+  't_vrach':             'amb_t_vrach',
 
-  // «Кровь на руках» — играет музыка Семейной идиллии
-  'f_ek_1_1':           'amb_f_family',
-  'f_ek_1_2':           'amb_f_family',
-  'f_ek_1_3':           'amb_f_family',
-  'f_ek_1_4':           'amb_f_family',
-  'f_el_2_1':           'amb_f_family',
-  'f_el_2_2':           'amb_f_family',
-  'f_el_2_3':           'amb_f_family',
-  'f_el_2_4':           'amb_f_family'
+  // === Индива Журналист ===
+  'j_journalist':        'amb_j_journalist',
+  'j_branch_pay':        'amb_j_journalist',
+  'j_branch_refuse':     'amb_j_journalist',
+  'j_branch_silence':    'amb_j_journalist',
+
+  // === Семейная идиллия ===
+  'f_family':            'amb_f_family',
+
+  // === Кровь на руках (все варианты) — играет музыка Семейной идиллии ===
+  'f_ek_1_1':            'amb_f_family',
+  'f_ek_1_2':            'amb_f_family',
+  'f_ek_1_3':            'amb_f_family',
+  'f_ek_1_4':            'amb_f_family',
+  'f_el_2_1':            'amb_f_family',
+  'f_el_2_2':            'amb_f_family',
+  'f_el_2_3':            'amb_f_family',
+  'f_el_2_4':            'amb_f_family',
+
+  // === Диагноз ===
+  'd_diagnosis':         'amb_d_diagnosis',
+
+  // === Индива Эксперимент над игроком (взять папку) ===
+  't_experiment':        'amb_t_experiment',
+
+  // === Индива Пациент №1 (не брать папку) ===
+  't_patient1':          'amb_t_patient1',
+  't_patient1_release':  'amb_t_patient1_rel',
+  't_patient1_hold':     'amb_t_patient1_hold',
+
+  // === Гибель питомца ===
+  'pet_real':            'amb_pet',
+  'pet_fake':            'amb_pet',
+
+  // === Индива Лоботомия ===
+  't_lobotomy_task':     'amb_t_lobotomy',
+
+  // === Индива Наташа ===
+  't_natasha':           'amb_t_natasha',
+
+  // === Индива Саша мелкий ===
+  't_sasha_small':       'amb_t_sasha_small'
 };
    var SCENE_VOLUME = {
   'pet_real': 0.85,
