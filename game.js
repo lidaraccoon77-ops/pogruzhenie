@@ -233,17 +233,18 @@ var Mp3 = (function(){
   var cache = {};
   var ambientAudio = null;
 
-  function load(name){
+    function load(name){
     if (cache[name]) return cache[name];
     var path = SOUND_FILES[name];
     if (!path) return null;
+    var sep = path.indexOf('?') === -1 ? '?' : '&';
+    var url = path + sep + 't=' + Date.now();
     var a = new Audio();
-    a.src = path;
+    a.src = url;
     a.preload = 'auto';
     cache[name] = a;
     return a;
   }
-
   function exists(name){ return !!SOUND_FILES[name]; }
 
   function preloadAll(){
