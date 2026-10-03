@@ -233,33 +233,54 @@ var Mp3 = (function(){
   var cache = {};
   var ambientAudio = null;
 
-    function load(name){
+      function load(name){
     if (cache[name]) return cache[name];
     var path = SOUND_FILES[name];
     if (!path) return null;
-    var sep = path.indexOf('?') === -1 ? '?' : '&';
-    var url = path + sep + 't=' + Date.now();
     var a = new Audio();
-    a.src = url;
+    a.src = path;
     a.preload = 'auto';
     cache[name] = a;
     return a;
   }
   function exists(name){ return !!SOUND_FILES[name]; }
 
-  function preloadAll(){
-    for (var n in SOUND_FILES) { load(n); }
+    function preloadAll(){
+    var keys = Object.keys(SOUND_FILES);
+    for (var i = 0; i < keys.length; i++){
+      (function(name){
+        var path = SOUND_FILES[name];
+        if (!path) return;
+        // fetch качает файл в фоне. Параллельно для всех mp3.
+        fetch(path, { cache: 'force-cache' })
+          .then(function(r){ return r.blob(); })
+          .then(function(blob){
+            // Кладём blob в кэш — игра возьмёт его моментально
+            if (!cache[name]) {
+              cache[name] = URL.createObjectURL(blob);
+            }
+          })
+          .catch(function(){});
+      })(keys[i]);
+    }
   }
 
-  function play(name, volume){
+    function play(name, volume){
     if (!exists(name)) return false;
     try {
-      var a = load(name);
-      if (!a) return false;
-      var c = a.cloneNode();
-      c.volume = (typeof volume === 'number') ? volume : 0.9;
-      var p = c.play();
-      if (p && p.catch) p.catch(function(){});
+      var src = cache[name];
+      if (!src) {
+        var path = SOUND_FILES[name];
+        var a = new Audio(path);
+        a.volume = (typeof volume === 'number') ? volume : 0.9;
+        var p = a.play();
+        if (p && p.catch) p.catch(function(){});
+        return true;
+      }
+      var a2 = new Audio(src);
+      a2.volume = (typeof volume === 'number') ? volume : 0.9;
+      var p2 = a2.play();
+      if (p2 && p2.catch) p2.catch(function(){});
       return true;
     } catch(e){ return false; }
   }
@@ -275,9 +296,8 @@ var Mp3 = (function(){
     if (!exists(name)) return false;
     stopLoop();
     try {
-      var a = load(name);
-      if (!a) return false;
-      ambientAudio = a.cloneNode();
+      var src = cache[name] || SOUND_FILES[name];
+      ambientAudio = new Audio(src);
       ambientAudio.loop = true;
       ambientAudio.volume = (typeof volume === 'number') ? volume : 0.4;
       var p = ambientAudio.play();
@@ -286,23 +306,22 @@ var Mp3 = (function(){
     } catch(e){ return false; }
   }
 
-  function playPlaylist(names, volume){
+    function playPlaylist(names, volume){
     stopLoop();
     function playAt(index){
       if (index >= names.length) return;
       var name = names[index];
       if (!exists(name)) { playAt(index + 1); return; }
-      var a = load(name);
-      if (!a) { playAt(index + 1); return; }
-      var clone = a.cloneNode();
+      var src = cache[name] || SOUND_FILES[name];
+      var a = new Audio(src);
       var isLast = (index === names.length - 1);
-      clone.loop = isLast;
-      clone.volume = (typeof volume === 'number') ? volume : 0.5;
-      clone.onended = function(){
+      a.loop = isLast;
+      a.volume = (typeof volume === 'number') ? volume : 0.5;
+      a.onended = function(){
         if (!isLast) playAt(index + 1);
       };
-      ambientAudio = clone;
-      var p = clone.play();
+      ambientAudio = a;
+      var p = a.play();
       if (p && p.catch) p.catch(function(){});
     }
     playAt(0);
