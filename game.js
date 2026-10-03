@@ -220,8 +220,12 @@ var Mp3 = (function(){
     cache[name] = a;
     return a;
   }
+
   function exists(name){ return !!SOUND_FILES[name]; }
-  function preloadAll(){ for (var n in SOUND_FILES) { load(n); } }
+
+  function preloadAll(){
+    for (var n in SOUND_FILES) { load(n); }
+  }
 
   function play(name, volume){
     if (!exists(name)) return false;
@@ -235,6 +239,14 @@ var Mp3 = (function(){
       return true;
     } catch(e){ return false; }
   }
+
+  function stopLoop(){
+    if (ambientAudio){
+      try { ambientAudio.pause(); ambientAudio.currentTime = 0; } catch(e){}
+      ambientAudio = null;
+    }
+  }
+
   function playLoop(name, volume){
     if (!exists(name)) return false;
     stopLoop();
@@ -249,7 +261,8 @@ var Mp3 = (function(){
       return true;
     } catch(e){ return false; }
   }
-     function playPlaylist(names, volume){
+
+  function playPlaylist(names, volume){
     stopLoop();
     function playAt(index){
       if (index >= names.length) return;
@@ -270,25 +283,23 @@ var Mp3 = (function(){
     }
     playAt(0);
   }
-  function stopLoop(){
-    if (ambientAudio){
-      try { ambientAudio.pause(); ambientAudio.currentTime = 0; } catch(e){}
-      ambientAudio = null;
-    }
-  }
+
   function setMuted(v){
     if (ambientAudio){
       try { ambientAudio.volume = v ? 0 : 0.4; } catch(e){}
     }
   }
-    return {
+
+  return {
     preloadAll: preloadAll,
     play: play,
     playLoop: playLoop,
-    playPlaylist: playPlaylist,   // ← добавили эту строку
+    playPlaylist: playPlaylist,
     stopLoop: stopLoop,
     setMuted: setMuted,
     exists: exists
+  };
+})();
   };
 })();
    var Audio2 = (function(){
