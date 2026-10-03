@@ -1,4 +1,43 @@
 (function () {
+   /* ============================================================
+   КАРТА ЗВУКОВЫХ ФАЙЛОВ
+   Имена файлов должны точно совпадать с тем, что лежит на GitHub.
+   ============================================================ */
+
+var SOUND_FILES = {
+  // ==== Атмосферные (фон сцен) ====
+  'amb_intro_lab':         'assets/audio/1.%20ambient_Vhod_v_laboratoriyu.mp3',
+  'amb_intro_rules':       'assets/audio/2.%20ambient_Instrukciya_i_podgotovka.mp3',
+  'amb_intro_dive':        'assets/audio/4.%20ambient_Nachalo_puteshestviya.mp3',
+  'amb_h_glory':           'assets/audio/5.1%20ambient_Zal_slavy%20.mp3',
+  'amb_t_vrach':           'assets/audio/6.%20ambient_Vrach.mp3',
+  'amb_j_journalist':      'assets/audio/7.%20ambient_Zhurnalist.mp3',
+  'amb_f_family':          'assets/audio/8.%20ambient_Semejnaya_idilliya.mp3',
+  'amb_t_experiment':      'assets/audio/9.%20ambient_Eksperiment_nad_igrokom.mp3',
+  'amb_t_patient1':        'assets/audio/10.%20ambient_Pacient%E2%84%961.mp3',
+  'amb_t_patient1_rel':    'assets/audio/11.%20ambient_Pacient%E2%84%961Vypustit.mp3',
+  'amb_t_patient1_hold':   'assets/audio/12.%20ambient_Pacient%E2%84%961Ne_vypuskat.mp3',
+  'amb_pet':               'assets/audio/13.%20ambient_Gibel_pitomca.mp3',
+  'amb_t_lobotomy':        'assets/audio/14.%20ambient_Lobotomiya.mp3',
+  'amb_t_natasha':         'assets/audio/16.%20ambient_Natasha.mp3',
+  'amb_t_sasha_small':     'assets/audio/17.%20ambient_Sasha%20melkij.mp3',
+
+  // ==== Клики по выборам ====
+  'click_hero':       'assets/audio/click_choice_On_geroj.mp3',
+  'click_truth':      'assets/audio/click_choice_my_ne_znaem.mp3',
+  'click_take_folder':'assets/audio/click_choice_Vzyat_papku.mp3',
+  'click_no_folder':  'assets/audio/click_choice_ne_brat_papku.mp3',
+  'click_abort':      'assets/audio/click_choice_abort.mp3',
+  'click_family':     'assets/audio/click_choice_semya.mp3',
+  'click_keys':       'assets/audio/click_choice_klyuchi.mp3',
+  'click_release':    'assets/audio/click_choice_vypustit.mp3',
+  'click_hold':       'assets/audio/click_choice_ne_vypuskat.mp3',
+
+  // ==== Кнопки «Продолжить» ====
+  'click_next':       'assets/audio/click_choice_Prodlolzhit.mp3',
+  'click_next2':      'assets/audio/click_choice_Prodlolzhit1.mp3',
+  'click_next3':      'assets/audio/click_choice_Prodlolzhit2.mp3'
+};
 'use strict';
 
 var CSS = [
@@ -116,59 +155,29 @@ var CHARACTER_COLORS = {
    ============================================================ */
 
 var SCREAMER_SCENES = {
-  'j_branch_refuse':  'stab',
-  'j_branch_silence': 'stab',
-  't_patient1_hold':  'scream',
-  't_vrach':          'howl',
-  'pet_real':         'crash',
-  'pet_fake':         'crash',
-  'f_ek_1_1':         'crash',
-  'f_ek_1_3':         'crash',
-  'f_el_2_1':         'stab',
-  'f_el_2_3':         'stab',
-  't_experiment':     'drill',
-  't_lobotomy_task':  'drill',
-  'e11':              'crash',
-  'e21':              'scream',
-  'e31':              'scream',
-  'e32':              'scream'
+  // Пока пусто. Сюда впишем сцены-скримеры, когда появятся mp3.
 };
-
 /* ============================================================
    АТМОСФЕРНЫЕ ЗВУКИ ПО СЦЕНАМ
    ============================================================ */
 
 var SCENE_AMBIENT = {
-  'intro_lab':       'hospital',
-  'intro_rules':     'hospital',
-  'intro_dive':      'whispers',
-  'h_glory':         'applause',
-  'j_journalist':    'tv',
-  'j_branch_pay':    'tv',
-  'j_branch_refuse': 'tv',
-  'j_branch_silence':'tv',
-  'f_family':        'candle',
-  'd_diagnosis':     'hospital',
-  't_experiment':    'surgery',
-  't_vrach':         'strobe',
-  't_patient1':      'prison',
-  't_patient1_release':'prison',
-  't_patient1_hold': 'prison',
-  'pet_real':        'garden',
-  'pet_fake':        'garden',
-  't_lobotomy_task': 'surgery',
-  't_natasha':       'toys',
-  'f_ek_1_1':        'home_night',
-  'f_ek_1_2':        'home_night',
-  'f_ek_1_3':        'home_night',
-  'f_ek_1_4':        'home_night',
-  'f_el_2_1':        'home_night',
-  'f_el_2_2':        'home_night',
-  'f_el_2_3':        'home_night',
-  'f_el_2_4':        'home_night',
-  't_sasha_small':   'clock',
-  'resolve':         'heartbeat',
-  'ending':          'final'
+  'intro_lab':          'amb_intro_lab',
+  'intro_rules':        'amb_intro_rules',
+  'intro_dive':         'amb_intro_dive',
+  'h_glory':            'amb_h_glory',
+  't_vrach':            'amb_t_vrach',
+  'j_journalist':       'amb_j_journalist',
+  'f_family':           'amb_f_family',
+  't_experiment':       'amb_t_experiment',
+  't_patient1':         'amb_t_patient1',
+  't_patient1_release': 'amb_t_patient1_rel',
+  't_patient1_hold':    'amb_t_patient1_hold',
+  'pet_real':           'amb_pet',
+  'pet_fake':           'amb_pet',
+  't_lobotomy_task':    'amb_t_lobotomy',
+  't_natasha':          'amb_t_natasha',
+  't_sasha_small':      'amb_t_sasha_small'
 };
 
 /* ============================================================
