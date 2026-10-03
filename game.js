@@ -249,6 +249,27 @@ var Mp3 = (function(){
       return true;
     } catch(e){ return false; }
   }
+     function playPlaylist(names, volume){
+    stopLoop();
+    function playAt(index){
+      if (index >= names.length) return;
+      var name = names[index];
+      if (!exists(name)) { playAt(index + 1); return; }
+      var a = load(name);
+      if (!a) { playAt(index + 1); return; }
+      var clone = a.cloneNode();
+      var isLast = (index === names.length - 1);
+      clone.loop = isLast;
+      clone.volume = (typeof volume === 'number') ? volume : 0.5;
+      clone.onended = function(){
+        if (!isLast) playAt(index + 1);
+      };
+      ambientAudio = clone;
+      var p = clone.play();
+      if (p && p.catch) p.catch(function(){});
+    }
+    playAt(0);
+  }
   function stopLoop(){
     if (ambientAudio){
       try { ambientAudio.pause(); ambientAudio.currentTime = 0; } catch(e){}
