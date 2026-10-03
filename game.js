@@ -21,7 +21,7 @@ var SOUND_FILES = {
     'amb_t_patient1_rel':   'assets/audio/11.%20ambient_Pacient%E2%84%961Vypustit.MP3',
   'amb_t_patient1_rel_2': 'assets/audio/11.%20ambient_Pacient%E2%84%961Vypustit2.mp3.MP3',
   'amb_t_patient1_hold':   'assets/audio/12.%20ambient_Pacient%E2%84%961Ne_vypuskat.mp3',
-  'amb_pet':               'assets/audio/13.%20ambient_Gibel_pitomca.mp3',
+  'amb_pet': 'assets/audio/13.%20ambient_Gibel_pitomca_v2.mp3',
   'amb_t_lobotomy':        'assets/audio/14.%20ambient_Lobotomiya.mp3',
     'amb_t_sasha_small':  'assets/audio/17.%20ambient_Sasha%20melkij.mp3',
     'amb_t_natasha':      'assets/audio/15.%20ambient_Natasha.mp3',
