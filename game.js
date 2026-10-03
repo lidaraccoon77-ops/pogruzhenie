@@ -245,26 +245,47 @@ var Mp3 = (function(){
   }
   function exists(name){ return !!SOUND_FILES[name]; }
 
-    function preloadAll(){
+      function preloadAll(onProgress, onDone){
     var keys = Object.keys(SOUND_FILES);
-    for (var i = 0; i < keys.length; i++){
-      (function(name){
-        var path = SOUND_FILES[name];
-        if (!path) return;
-        // fetch качает файл в фоне. Параллельно для всех mp3.
-        fetch(path, { cache: 'force-cache' })
-          .then(function(r){ return r.blob(); })
-          .then(function(blob){
-            // Кладём blob в кэш — игра возьмёт его моментально
-            if (!cache[name]) {
-              cache[name] = URL.createObjectURL(blob);
-            }
-          })
-          .catch(function(){});
-      })(keys[i]);
-    }
-  }
+    var total = keys.length;
+    var loaded = 0;
+    var finished = false;
 
+    function tick(){
+      loaded++;
+      if (onProgress) onProgress(loaded, total);
+      if (loaded >= total && !finished){
+        finished = true;
+        if (onDone) onDone();
+      }
+    }
+
+    if (total === 0){
+      if (onDone) onDone();
+      return;
+    }
+
+    keys.forEach(function(name){
+      var path = SOUND_FILES[name];
+      if (!path) { tick(); return; }
+      fetch(path, { cache: 'force-cache' })
+        .then(function(r){ return r.blob(); })
+        .then(function(blob){
+          if (!cache[name]) {
+            cache[name] = URL.createObjectURL(blob);
+          }
+          tick();
+        })
+        .catch(function(){ tick(); });
+    });
+
+    setTimeout(function(){
+      if (!finished){
+        finished = true;
+        if (onDone) onDone();
+      }
+    }, 15000);
+  }
     function play(name, volume){
     if (!exists(name)) return false;
     try {
@@ -2906,7 +2927,6 @@ function restart(){
 }
 
 function boot(){
-     Mp3.preloadAll();
   if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
   }
@@ -2925,37 +2945,68 @@ function boot(){
   buildDOM();
   updStatus();
 
-  var initAudio = function(){
-    Audio2.init();
-    document.removeEventListener('pointerdown', initAudio);
-    document.removeEventListener('keydown', initAudio);
-    document.removeEventListener('touchstart', initAudio);
-  };
-  document.addEventListener('pointerdown', initAudio);
-  document.addEventListener('keydown', initAudio);
-  document.addEventListener('touchstart', initAudio);
+  // Экран загрузки звуков
+  var loader = document.createElement('div');
+  loader.id = 'preloader';
+  loader.style.cssText = 'position:fixed;inset:0;background:#07080c;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;color:#d6dbe4;transition:opacity .5s ease;';
+  loader.innerHTML =
+    '<div style="font-family:Oswald,sans-serif;font-size:22px;letter-spacing:.3em;color:#5ee6e0;margin-bottom:20px;text-transform:uppercase">Загрузка звуков</div>' +
+    '<div style="width:280px;height:3px;background:rgba(94,230,224,.1);position:relative;overflow:hidden">' +
+      '<div id="preBar" style="height:100%;width:0%;background:linear-gradient(90deg,#5ee6e0,#ff4757);box-shadow:0 0 12px #5ee6e0;transition:width .25s ease"></div>' +
+    '</div>' +
+    '<div id="preText" style="margin-top:16px;font-size:11px;letter-spacing:.2em;color:#7a8290">0 / 0</div>';
+  document.body.appendChild(loader);
 
-  document.addEventListener('click', function(e){
-    Audio2.init();
-    var t = e.target;
-    while (t && t !== document.body){
-      if (t.classList && t.classList.contains('cbtn')){ Audio2.clickChoice(t); return; }
-      if (t.classList && t.classList.contains('pbtn')){
-        if (t.id === 'restart') Audio2.clickRestart();
-        else Audio2.clickContinue();
-        return;
+  var bar = document.getElementById('preBar');
+  var txt = document.getElementById('preText');
+
+  function finishBoot(){
+    loader.style.opacity = '0';
+    setTimeout(function(){
+      if (loader.parentNode) loader.parentNode.removeChild(loader);
+    }, 550);
+
+    var initAudio = function(){
+      Audio2.init();
+      document.removeEventListener('pointerdown', initAudio);
+      document.removeEventListener('keydown', initAudio);
+      document.removeEventListener('touchstart', initAudio);
+    };
+    document.addEventListener('pointerdown', initAudio);
+    document.addEventListener('keydown', initAudio);
+    document.addEventListener('touchstart', initAudio);
+
+    document.addEventListener('click', function(e){
+      Audio2.init();
+      var t = e.target;
+      while (t && t !== document.body){
+        if (t.classList && t.classList.contains('cbtn')){ Audio2.clickChoice(t); return; }
+        if (t.classList && t.classList.contains('pbtn')){
+          if (t.id === 'restart') Audio2.clickRestart();
+          else Audio2.clickContinue();
+          return;
+        }
+        if (t.id === 'dtog'){ Audio2.clickToggle(); return; }
+        t = t.parentNode;
       }
-      if (t.id === 'dtog'){ Audio2.clickToggle(); return; }
-      t = t.parentNode;
-    }
-  });
+    });
 
-  document.addEventListener('visibilitychange', function(){
-    if (document.hidden) Audio2.setMuted(true);
-    else Audio2.setMuted(false);
-  });
+    document.addEventListener('visibilitychange', function(){
+      if (document.hidden) Audio2.setMuted(true);
+      else Audio2.setMuted(false);
+    });
 
-  render('intro_lab');
+    render('intro_lab');
+  }
+
+  Mp3.preloadAll(
+    function(done, total){
+      var pct = Math.round((done / total) * 100);
+      if (bar) bar.style.width = pct + '%';
+      if (txt) txt.textContent = done + ' / ' + total;
+    },
+    finishBoot
+  );
 }
 
 if (document.readyState === 'loading'){
