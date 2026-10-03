@@ -300,8 +300,6 @@ var Mp3 = (function(){
     exists: exists
   };
 })();
-  };
-})();
    var Audio2 = (function(){
   var ctx, master, muted = false, started = false;
   var playedScreamers = {};
