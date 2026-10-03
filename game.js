@@ -165,10 +165,11 @@ var SCENE_AMBIENT = {
   'intro_lab':          'amb_intro_lab',
   'intro_rules':        'amb_intro_rules',
   'intro_dive':         'amb_intro_dive',
-  'h_glory':            'amb_h_glory',
+  'h_glory':            'amb_h_glory_1',
   't_vrach':            'amb_t_vrach',
   'j_journalist':       'amb_j_journalist',
   'f_family':           'amb_f_family',
+  'd_diagnosis':        'amb_d_diagnosis',
   't_experiment':       'amb_t_experiment',
   't_patient1':         'amb_t_patient1',
   't_patient1_release': 'amb_t_patient1_rel',
@@ -177,7 +178,25 @@ var SCENE_AMBIENT = {
   'pet_fake':           'amb_pet',
   't_lobotomy_task':    'amb_t_lobotomy',
   't_natasha':          'amb_t_natasha',
-  't_sasha_small':      'amb_t_sasha_small'
+  't_sasha_small':      'amb_t_sasha_small',
+
+  // «Кровь на руках» — играет музыка Семейной идиллии
+  'f_ek_1_1':           'amb_f_family',
+  'f_ek_1_2':           'amb_f_family',
+  'f_ek_1_3':           'amb_f_family',
+  'f_ek_1_4':           'amb_f_family',
+  'f_el_2_1':           'amb_f_family',
+  'f_el_2_2':           'amb_f_family',
+  'f_el_2_3':           'amb_f_family',
+  'f_el_2_4':           'amb_f_family'
+};
+   var SCENE_VOLUME = {
+  'pet_real': 0.85,
+  'pet_fake': 0.85
+};
+
+var SCENE_PLAYLISTS = {
+  'h_glory': ['amb_h_glory_1', 'amb_h_glory_2', 'amb_h_glory_3']
 };
 
 /* ============================================================
@@ -238,9 +257,14 @@ var Mp3 = (function(){
       try { ambientAudio.volume = v ? 0 : 0.4; } catch(e){}
     }
   }
-  return {
-    preloadAll: preloadAll, play: play, playLoop: playLoop,
-    stopLoop: stopLoop, setMuted: setMuted, exists: exists
+    return {
+    preloadAll: preloadAll,
+    play: play,
+    playLoop: playLoop,
+    playPlaylist: playPlaylist,   // ← добавили эту строку
+    stopLoop: stopLoop,
+    setMuted: setMuted,
+    exists: exists
   };
 })();
    var Audio2 = (function(){
@@ -727,10 +751,23 @@ var Mp3 = (function(){
     currentAmbient = { type: type, nodes: nodes, gain: gain };
   }
 
-    function playSceneAmbient(sceneId){
+      function playSceneAmbient(sceneId){
+    // Если для сцены задан плейлист (несколько треков подряд) — запускаем его
+    if (typeof SCENE_PLAYLISTS !== 'undefined' && SCENE_PLAYLISTS[sceneId]) {
+      var vList = (typeof SCENE_VOLUME !== 'undefined' && SCENE_VOLUME[sceneId]) || 0.55;
+      Mp3.playPlaylist(SCENE_PLAYLISTS[sceneId], vList);
+      return;
+    }
+
+    // Обычная одна мелодия для сцены
     var name = SCENE_AMBIENT[sceneId];
-    if (name && Mp3.playLoop(name, 0.4)) return;
-    return;
+    if (name){
+      var vol = (typeof SCENE_VOLUME !== 'undefined' && SCENE_VOLUME[sceneId]) || 0.55;
+      if (Mp3.playLoop(name, vol)) return;
+    }
+
+    // Если для сцены нет музыки — останавливаем всё, что играет
+    Mp3.stopLoop();
   }
   function stopAll(){ stopAmbient(); }
 
