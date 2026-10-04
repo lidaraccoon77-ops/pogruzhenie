@@ -216,8 +216,8 @@
   }
   if (Object.prototype.hasOwnProperty.call(MASTER_KEYS, key)) {
     isOwner = true; label = MASTER_KEYS[key];
-  } else if (Object.prototype.hasOwnProperty.call(INVESTOR_KEYS, key)) {
-    isOwner = false; label = INVESTOR_KEYS[key];
+  } else if (Object.prototype.hasOwnProperty.call(ISPYTUEMYJ_KEYS, key)) {
+    isOwner = false; label = ISPYTUEMYJ_KEYS[key];
     try {
       var b = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
       if (!b[key]) { b[key] = 'bound'; localStorage.setItem(STORAGE_KEY, JSON.stringify(b)); }
